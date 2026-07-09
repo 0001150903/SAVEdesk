@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tec&Nova — Soluções Tecnológicas</title>
+  <meta name="description" content="Há 7 anos desenvolvendo soluções tecnológicas simples, eficientes e inovadoras." />
+  <style>
+    :root { 
+      --bg: #021124; 
+      --panel: #071827; 
+      --panel-dark: #05121f;
+      --muted: #9fb2d9; 
+      --accent: #2e7be6; 
+      --accent-glowing: #4f7bd6;
+      --accent-2: #f28a30;
+      --text: #eaf2ff;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, var(--bg), #071428);
+      font-family: Inter, Segoe UI, system-ui, Arial;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Container Principal */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header Institucional */
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 20px;
+    }
+    .brand-header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+    }
+    .brand-header h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+    .brand-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Seção de Apresentação da Empresa */
+    .about-section {
+      margin-bottom: 50px;
+    }
+    .hero-text {
+      font-size: 22px;
+      color: #fff;
+      font-weight: 400;
+      margin-bottom: 18px;
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+    }
+    .company-description {
+      color: #cedbf2;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+    .vision-box {
+      background: rgba(4, 18, 36, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .vision-box h3 {
+      margin-top: 0;
+      color: var(--accent-glowing);
+    }
+
+    /* Seção e Grid de Soluções */
+    .solutions-section {
+      margin-bottom: 50px;
+    }
+    .solutions-section h2 {
+      font-size: 22px;
+      color: #fff;
+      margin-bottom: 24px;
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+    }
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .solution-card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-dark));
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .badge.ti { background: rgba(46, 123, 230, 0.15); color: #74c0fc; }
+    .badge.logistics { background: rgba(242, 138, 48, 0.15); color: #ffb06b; }
+    .badge.production { background: rgba(42, 165, 106, 0.15); color: #63e6be; }
+    
+    .solution-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      color: #fff;
+    }
+    .solution-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .card-footer {
+      margin-top: 18px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Área do Portal de Acesso (Final da Página) */
+    .access-container {
+      background: linear-gradient(180deg, var(--panel), rgba(4, 13, 26, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 460px;
+      margin: 0 auto;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+    .access-container h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #fff;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+      margin-bottom: 6px;
+    }
+    .access-container p.subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 16px 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #040d1a;
+      color: #fff;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: var(--accent-glowing);
+    }
+    .helper {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--accent-2);
+      text-align: center;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container" role="main">
+    
+    <!-- Cabeçalho da Empresa -->
+    <header class="brand-header">
+      <img src="Logo.svg" alt="Logo Tec&Nova">
+      <div>
+        <h1>TEC&NOVA</h1>
+        <p>Soluções Tecnológicas Inteligentes</p>
+      </div>
+    </header>
+
+    <!-- Apresentação Institucional -->
+    <section class="about-section">
+      <p class="hero-text">
+        Há 7 anos desenvolvendo soluções tecnológicas simples, eficientes e inovadoras, que otimizam processos, aumentam a produtividade e geram resultados reais.
+      </p>
+      <p class="company-description">
+        Transformamos a rotina operacional corporativa redesenhando fluxos complexos em ecossistemas digitais ágeis. Nossa atuação foca na eliminação definitiva de papéis e planilhas descentralizadas tanto no chão de fábrica quanto nos escritórios corporativos, entregando controle métrico e alta performance sem necessidade de aquisição de novas licenças de software locais.
+      </p>
+      
+      <div class="vision-box">
+        <h3>Nossa Missão & Referência</h3>
+        <p style="margin: 0; color: #cedbf2;">
+          Ser referência em soluções digitais inteligentes e acessíveis, reconhecida pela inovação, qualidade e impacto positivo na gestão de processos empresariais.
+        </p>
+      </div>
+    </section>
+
+    <!-- Seção de Cartões de Soluções -->
+    <section class="solutions-section">
+      <h2>Soluções Web Inteligentes & Acessíveis</h2>
+      
+      <div class="solutions-grid">
+        
+        <!-- Solução 1: Gestão de Chamados -->
+        <div class="solution-card">
+          <div>
+            <span class="badge ti">PRODUTIVIDADE TI</span>
+            <h3>NovaChamados v2.0</h3>
+            <p>
+              Central Lightweight para gerenciamento de requisições e suporte interno. Elimina gargalos operacionais e monitora SLAs da equipe técnica por meio de um fluxo visual Kanban responsivo, ideal para plantas industriais integradas.
+            </p>
+          </div>
+          <div class="card-footer" style="color: var(--accent-glowing);">✓ Arquitetura Zero Deploy integrada</div>
+        </div>
+
+        <!-- Solução 2: Logística e Almoxarifado -->
+        <div class="solution-card">
+          <div>
+            <span class="badge logistics">LOGÍSTICA INTERNA</span>
+            <h3>NovaAlmox</h3>
+            <p>
+              Controle digital simplificado de insumos, ferramentas e requisições de estoque. Substitui planilhas manuais e formulários físicos por alertas automáticos de níveis críticos e rastreabilidade total por operador e setor.
+            </p>
+          </div>
+          <div class="card-footer" style="color: #ffb06b;">✓ Rastreabilidade de suprimentos</div>
+        </div>
+
+        <!-- Solução 3: Linhas de Produção -->
+        <div class="solution-card">
+          <div>
+            <span class="badge production">CHÃO DE FÁBRICA</span>
+            <h3>NovaFlow</h3>
+            <p>
+              Monitor de eficiência para linhas de montagem industriais. Otimiza a coleta de métricas em tempo real por meio de tablets coletores, compilando relatórios diretos e unificados para auditorias da gerência administrativa.
+            </p>
+          </div>
+          <div class="card-footer" style="color: #63e6be;">✓ Análise de performance ao vivo</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Card Final: Portal de Acesso Unificado -->
+    <section class="access-container">
+      <h3>Portal Unificado de Soluções</h3>
+      <p class="subtitle">Insira suas credenciais para acessar os ecossistemas</p>
+      
+      <form id="loginForm" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="username">Usuário</label>
+          <input id="username" name="username" type="text" placeholder="Ex: tecnico ou fabrica" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Senha</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required />
+        </div>
+
+        <div class="actions">
+          <span style="font-size: 12px; color: var(--muted)">Ambiente Homologado</span>
+          <button class="btn" type="submit">Acessar Painel</button>
+        </div>
+
+        <p id="feedback" class="helper" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer>
+      &copy; Tec&Nova — Todos os direitos reservados.
+    </footer>
+
+  </main>
+
+  <script>
+    (function(){
+      const form = document.getElementById('loginForm');
+      const feedback = document.getElementById('feedback');
+      function show(msg){ feedback.textContent = msg; }
+      
+      form.addEventListener('submit',(e)=>{
+        e.preventDefault();
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        
+        if(!u || !p){
+          show('Por favor, informe usuário e senha.');
+          return;
+        }
+        
+        show('Verificando credenciais...');
+        setTimeout(()=>{
+          // Redirecionamentos baseados na estrutura pré-existente
+          if(u==='tecnico' && p==='123'){ 
+            localStorage.setItem('ompi_current_user','tecnico'); 
+            show('Acesso concedido. Redirecionando...'); 
+            setTimeout(()=> location.href='dashboard_ti.html', 600); 
+            return; 
+          }
+          if(u==='fabrica' && p==='123'){ 
+            localStorage.setItem('ompi_current_user','fabrica'); 
+            show('Acesso concedido. Redirecionando...'); 
+            setTimeout(()=> location.href='user.html', 600); 
+            return; 
+          }
+
+          // Fallback para outros usuários informados
+          localStorage.setItem('ompi_current_user', u); 
+          show('Acessando painel rápido...'); 
+          setTimeout(()=> location.href='user.html', 600);
+        }, 700);
+      });
+    })();
+  </script>
+</body>
+</html>

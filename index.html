@@ -1,58 +1,358 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tec&Nova — Login</title>
-  <meta name="description" content="Login Tec&Nova - Área restrita" />
+  <title>Tec&Nova — Soluções Tecnológicas</title>
+  <meta name="description" content="Há 7 anos desenvolvendo soluções tecnológicas simples, eficientes e inovadoras." />
   <style>
-    body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#021124,#071428);font-family:Inter,Segoe UI,system-ui,Arial;color:#eaf2ff}
-  /* Regras de header removidas (navegação superior ocultada) */
-    .login-wrap{width:360px;background:linear-gradient(180deg,#071827,#081a2b);padding:22px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
-    .brand{display:flex;gap:12px;align-items:center}
-    h1{margin:0;font-size:20px}
-    .login-title{color:#bcd7ff}
-    label{display:block;font-size:13px;color:#9fb2d9;margin-top:10px}
-    input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#eaf2ff}
-    .actions{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
-  .remember{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#9fb2d9}
-  .remember input{width:16px;height:16px;margin:0;display:inline-block}
-    .btn{background:#2e7be6;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
-    .helper{margin-top:10px;color:#9fb2d9}
+    :root { 
+      --bg: #021124; 
+      --panel: #071827; 
+      --panel-dark: #05121f;
+      --muted: #9fb2d9; 
+      --accent: #2e7be6; 
+      --accent-glowing: #4f7bd6;
+      --accent-2: #f28a30;
+      --text: #eaf2ff;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, var(--bg), #071428);
+      font-family: Inter, Segoe UI, system-ui, Arial;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Container Principal */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header Institucional */
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 20px;
+    }
+    .brand-header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+    }
+    .brand-header h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+    .brand-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Secção de Apresentação da Empresa */
+    .about-section {
+      margin-bottom: 50px;
+    }
+    .hero-text {
+      font-size: 22px;
+      color: #fff;
+      font-weight: 400;
+      margin-bottom: 18px;
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+    }
+    .company-description {
+      color: #cedbf2;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+    .vision-box {
+      background: rgba(4, 18, 36, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .vision-box h3 {
+      margin-top: 0;
+      color: var(--accent-glowing);
+    }
+
+    /* PRODUTO PRINCIPAL EM DESTAQUE: SAVEdesk */
+    .main-solution-card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-dark));
+      border: 1px solid rgba(46, 123, 230, 0.25);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      margin-bottom: 50px;
+    }
+    .main-solution-card h2 {
+      margin-top: 0;
+      font-size: 24px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .main-solution-card h2::before {
+      content: '💻';
+      font-size: 22px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .project-info ul {
+      padding-left: 20px;
+      margin: 12px 0;
+    }
+    .project-info li {
+      margin-bottom: 8px;
+      color: #cedbf2;
+      font-size: 14px;
+    }
+
+    /* Área de Login Integrada no Card Principal */
+    .login-box {
+      background: rgba(2, 11, 22, 0.5);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .login-box h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: var(--muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+      text-align: center;
+    }
+
+    /* Secção de Outras Soluções */
+    .secondary-solutions {
+      margin-bottom: 50px;
+    }
+    .secondary-solutions h3.section-title {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: var(--muted);
+    }
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .solution-card {
+      background: rgba(7, 24, 39, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    /* Badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .badge.ti { background: rgba(46, 123, 230, 0.2); color: #74c0fc; }
+    .badge.logistics { background: rgba(242, 138, 48, 0.15); color: #ffb06b; }
+    .badge.production { background: rgba(42, 165, 106, 0.15); color: #63e6be; }
+    
+    .solution-card h4 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: #fff;
+    }
+    .solution-card p {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Elementos de Formulário */
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #040d1a;
+      color: #fff;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: var(--accent-glowing);
+    }
+    .helper {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--accent-2);
+      text-align: center;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 12px;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
-  <!-- header removido conforme solicitação (navegação superior ocultada) -->
-  <main class="login-wrap" role="main" aria-labelledby="loginTitle">
-    <div class="brand">
-  <img src="Logo.svg" alt="Logo OMPI" style="width: 40px; height: 40px; border-radius: 8px;">
+
+  <main class="container" role="main">
+    
+    <header class="brand-header">
+      <img src="Logo.svg" alt="Logo Tec&Nova">
       <div>
-        <h1 id="loginTitle">Tec&Nova</h1>
-        <p style="margin:0;color:#9fb2d9">Portal de Acesso</p>
+        <h1>TEC&NOVA</h1>
+        <p>Soluções Tecnológicas Inteligentes</p>
       </div>
-    </div>
+    </header>
 
-    <h2 class="login-title">Entrar na sua conta</h2>
-
-    <form class="login-form" id="loginForm" action="#" method="post" novalidate>
-      <div class="field">
-        <label for="username">Usuário</label>
-        <input id="username" name="username" type="text" placeholder="seu.usuario" autocomplete="username" required />
+    <section class="about-section">
+      <p class="hero-text">
+        Há 7 anos desenvolvendo soluções tecnológicas simples, eficientes e inovadoras, que otimizam processos, aumentam a produtividade e geram resultados reais.
+      </p>
+      <p class="company-description">
+        Transformamos a rotina operacional corporativa redesenhando fluxos complexos em ecossistemas digitais ágeis. Nossa atuação foca na eliminação definitiva de papéis e planilhas descentralizadas tanto no chão de fábrica quanto nos escritórios corporativos, entregando controle métrico e alta performance sem necessidade de aquisição de novas licenças de software locais.
+      </p>
+      
+      <div class="vision-box">
+        <h3>Nossa Missão & Referência</h3>
+        <p style="margin: 0; color: #cedbf2;">
+          Ser referência em soluções digitais inteligentes e acessíveis, reconhecida pela inovação, qualidade e impacto positivo na gestão de processos empresariais.
+        </p>
       </div>
+    </section>
 
-      <div class="field">
-        <label for="password">Senha</label>
-        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+    <section class="main-solution-card">
+      <span class="badge ti" style="font-size: 12px; padding: 4px 12px;">SOLUÇÃO CORE PRINCIPAL</span>
+      <h2>SAVEdesk v2.0</h2>
+      
+      <div class="main-grid">
+        <div class="project-info">
+          <p style="margin-top: 0; color: #fff; font-size: 18px; font-weight: 500;">
+            Sistema Integrado de Gestão de Chamados de TI
+          </p>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 12px;">
+            Desenvolvido como um protótipo funcional de alta performance (demanda OMPI do Brasil / SENAI) para organizar o fluxo de requisições de baixa complexidade no chão de fábrica. Elimina planilhas e gargalos de alocação de técnicos por meio de monitoramento ativo.
+          </p>
+          <ul>
+            <li><strong>Gestão Kanban Visual:</strong> Monitoramento de chamados em tempo real (Pendente, Em Andamento, Concluído).</li>
+            <li><strong>Métricas Automatizadas:</strong> Coleta de timestamps para auditorias de SLA e eficiência corporativa.</li>
+            <li><strong>Leveza e Praticidade:</strong> Engenharia <em>Lightweight/Zero Deploy</em> que opera direto no navegador.</li>
+          </ul>
+        </div>
+
+        <div class="login-box">
+          <h3>Acesso ao SAVEdesk</h3>
+          <form id="loginForm" autocomplete="off" novalidate>
+            <div class="field">
+              <label for="username">Utilizador</label>
+              <input id="username" name="username" type="text" placeholder="Ex: admin, tecnico ou fabrica" required />
+            </div>
+
+            <div class="field">
+              <label for="password">Palavra-passe</label>
+              <input id="password" name="password" type="password" placeholder="••••••••" required />
+            </div>
+
+            <div class="actions">
+              <span style="font-size: 11px; color: var(--muted)">Ambiente Seguro</span>
+              <button class="btn" type="submit">Entrar no Sistema</button>
+            </div>
+
+            <p id="feedback" class="helper" role="status" aria-live="polite"></p>
+          </form>
+        </div>
       </div>
+    </section>
 
-      <div class="actions">
-        <label class="remember"><input type="checkbox" name="remember" /> Lembrar</label>
-        <button class="btn" type="submit">Entrar</button>
+    <section class="secondary-solutions">
+      <h3 class="section-title">Outras Extensões do Nosso Portfólio</h3>
+      
+      <div class="solutions-grid">
+        
+        <div class="solution-card">
+          <div>
+            <span class="badge logistics">LOGÍSTICA INTERNA</span>
+            <h4>NovaAlmox</h4>
+            <p>
+              Controle digital simplificado de insumos, ferramentas e requisições de stock. Substitui o papel por alertas de níveis críticos e rastreabilidade total por operador e setor.
+            </p>
+          </div>
+          <div style="margin-top: 14px; font-size: 11px; color: #ffb06b; font-weight: 500;">✓ Integrado ao setor de suprimentos</div>
+        </div>
+
+        <div class="solution-card">
+          <div>
+            <span class="badge production">CHÃO DE FÁBRICA</span>
+            <h4>NovaFlow</h4>
+            <p>
+              Monitor de eficiência para linhas de montagem industriais (Produção A/B). Otimiza a recolha de métricas de produtividade via tablets, gerando relatórios consolidados limpos.
+            </p>
+          </div>
+          <div style="margin-top: 14px; font-size: 11px; color: #63e6be; font-weight: 500;">✓ Análise de performance em tempo real</div>
+        </div>
+
       </div>
+    </section>
 
-      <p id="feedback" class="helper" role="status" aria-live="polite"></p>
-    </form>
+    <footer>
+      &copy; Tec&Nova — Todos os direitos reservados.
+    </footer>
+
   </main>
 
   <script>
@@ -60,25 +360,52 @@
       const form = document.getElementById('loginForm');
       const feedback = document.getElementById('feedback');
       function show(msg){ feedback.textContent = msg; }
+      
       form.addEventListener('submit',(e)=>{
         e.preventDefault();
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
-        // validation: do not allow empty username or password
+        
         if(!u || !p){
-          show('Por favor informe usuário e senha.');
+          show('Por favor, informe o utilizador e palavra-passe.');
           return;
         }
-        show('Verificando...');
+        
+        show('Verificando credenciais...');
         setTimeout(()=>{
-          if(u==='admin' && p==='123'){ localStorage.setItem('ompi_current_user','admin'); show('Redirecionando...'); setTimeout(()=> location.href='dashboard_ti.html',600); return; }
-          if(u==='fabrica' && p==='123'){ localStorage.setItem('ompi_current_user','fabrica'); show('Redirecionando...'); setTimeout(()=> location.href='user.html',600); return; }
-          // fallback: treat as regular user (only when both fields provided)
-          localStorage.setItem('ompi_current_user', u); show('Entrando...'); setTimeout(()=> location.href='user.html',600);
-        },700);
+          // Redirecionamentos baseados na estrutura de perfis
+          
+          // 1. Acesso Administrador
+          if(u==='admin' && p==='123'){ 
+            localStorage.setItem('ompi_current_user','admin'); 
+            show('Acesso administrativo concedido. Redirecionando...'); 
+            setTimeout(()=> location.href='dashboard_administrador.html', 600); 
+            return; 
+          }
+          
+          // 2. Acesso Técnico de TI
+          if(u==='tecnico' && p==='123'){ 
+            localStorage.setItem('ompi_current_user','tecnico'); 
+            show('Acesso concedido. Redirecionando...'); 
+            setTimeout(()=> location.href='dashboard_ti.html', 600); 
+            return; 
+          }
+          
+          // 3. Acesso Fábrica/Colaborador
+          if(u==='fabrica' && p==='123'){ 
+            localStorage.setItem('ompi_current_user','fabrica'); 
+            show('Acesso concedido. Redirecionando...'); 
+            setTimeout(()=> location.href='user.html', 600); 
+            return; 
+          }
+
+          // Fallback genérico para outros utilizadores informados ou cadastrados manualmente
+          localStorage.setItem('ompi_current_user', u); 
+          show('Acessando painel rápido...'); 
+          setTimeout(()=> location.href='user.html', 600);
+        }, 700);
       });
     })();
   </script>
-  <footer style="position:fixed;left:0;right:0;bottom:8px;text-align:center;color:rgba(234,242,255,0.6);font-size:12px">&copy; Tec&Nova - Sistema de Chamados</footer>
 </body>
 </html>

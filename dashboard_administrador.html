@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SAVEdesk — Dashboard Administrador</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root { 
+      --bg: #071023; 
+      --panel: #08182a; 
+      --muted: #9aa4b2; 
+      --accent: #2e7be6; 
+      --ok: #2aa56a;
+    }
+    
+    html, body {
+      height: 100%; margin: 0; font-family: Inter, Segoe UI, system-ui, Arial; 
+      background: linear-gradient(180deg, #03121a, #071422); color: #e6eef8;
+    }
+    .container { max-width: 1200px; margin: 20px auto; padding: 18px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .brand { display: flex; gap: 12px; align-items: center; }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    
+    .btn { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--muted); }
+    .btn.ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn.submit-btn { background: var(--ok); }
+    
+    .search {
+      padding: 10px 12px; font-size: 14px; border-radius: 6px; 
+      border: 1px solid rgba(255,255,255,0.06); background: #fff; color: #0b1220; min-width: 300px;
+    }
+    .search::placeholder { color: var(--muted); }
+    
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .summary { background: linear-gradient(180deg, #061426, #081a2a); padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 8px; }
+    .summary .label { font-size: 13px; color: var(--muted); }
+    .summary .value { font-size: 24px; font-weight: 700; }
+    
+    .panel { background: linear-gradient(180deg, #071428, #08182a); padding: 16px; border-radius: 10px; margin-top: 16px; border: 1px solid rgba(255,255,255,0.04); }
+    .panel h2 { margin: 0 0 16px 0; font-size: 16px; color: #fff; }
+    
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; color: #eaf2ff; font-size: 13px; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: left; }
+    th { font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    
+    /* Modais */
+    .modal { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(3, 18, 26, 0.85); z-index: 100; backdrop-filter: blur(4px); }
+    .modal.hidden { display: none !important; }
+    .modal-panel { background: linear-gradient(180deg, var(--panel), #061426); padding: 24px; border-radius: 12px; min-width: 380px; max-height: 90vh; overflow-y: auto; color: #dfe9f8; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
+    
+    label { display: block; margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    input:not(.search), select, textarea {
+      width: 100%; padding: 10px 14px; margin-top: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); 
+      background: rgba(255,255,255,0.02); color: #e6eef8; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .hidden { display: none !important; }
+    
+    /* Chat bubbles */
+    .chat-msg { margin-bottom: 8px; max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+    .chat-msg.me { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px 10px 6px 10px; }
+    .chat-msg.other { background: rgba(255,255,255,0.06); color: #eaf2ff; border-radius: 10px 10px 10px 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="top">
+      <div class="brand">
+        <img src="Logo.svg" alt="Logo" style="width:46px;height:46px;border-radius:8px;background:#fff;padding:4px">
+        <div>
+          <h1 style="margin:0;font-size:20px">SAVEdesk — Painel Administrador</h1>
+          <div style="color:var(--muted);font-size:13px">Visão Geral, Gestão e Relatórios</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="globalSearch" class="search" placeholder="Pesquisar por id, solicitante, setor..." />
+        <button type="button" class="btn" onclick="abrirModalCadastro()" style="display:flex; gap:8px; align-items:center;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+          Novo Usuário
+        </button>
+        <button id="openCreate" class="btn ghost">Novo Chamado</button>
+        <button id="filterOpenBtn" class="btn ghost">Somente Abertos</button>
+        <button id="exportCsv" class="btn ghost">📥 Exportar XLSX</button>
+      </div>
+    </header>
+
+    <div class="cards">
+      <div class="summary">
+        <div class="label">Total de Chamados</div>
+        <div id="totalCount" class="value">0</div>
+      </div>
+      <div class="summary">
+        <div class="label">Pendentes</div>
+        <div id="pendingCount" class="value" style="color:#ef4444">0</div>
+      </div>
+      <div class="summary">
+        <div class="label">Em andamento</div>
+        <div id="doingCount" class="value" style="color:#f59e0b">0</div>
+      </div>
+      <div class="summary">
+        <div class="label">Concluídos</div>
+        <div id="doneCount" class="value" style="color:#10b981">0</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Distribuição por Status</h2>
+      <canvas id="statusChart" width="400" height="100"></canvas>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <h2 style="margin:0">Gestão de Chamados</h2>
+        <button id="refreshBtn" class="btn ghost" style="padding: 6px 12px; font-size:12px;">↻ Atualizar Dados</button>
+      </div>
+      <div class="table-wrap">
+        <table id="ticketsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Solicitante</th>
+              <th>Setor</th>
+              <th>Categoria</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Abertura</th>
+              <th>Ações Administrativas</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalCadastroUsuario" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-panel" style="width: 420px; max-width: 95%;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+        <h2 style="margin:0; font-size: 18px;">Cadastrar Novo Usuário</h2>
+        <button onclick="fecharModalCadastro()" style="background:transparent; border:none; color:var(--muted); font-size:18px; cursor:pointer;">✖</button>
+      </div>
+      
+      <form id="formCadastroUsuario" onsubmit="salvarNovoUsuario(event)">
+        <label>Nome Completo<input type="text" id="cadNome" placeholder="Ex: João da Silva" required></label>
+        <label>Nome de Utilizador (Login)<input type="text" id="cadUsername" placeholder="joao.silva" required></label>
+        <label>Senha<input type="password" id="cadSenha" placeholder="••••••••" required></label>
+        <label>Perfil de Acesso
+          <select id="cadPerfil" required>
+            <option value="colaborador" selected>Colaborador (Fábrica)</option>
+            <option value="tecnico">Técnico (Equipe de TI)</option>
+            <option value="admin">Administrador Geral</option>
+          </select>
+        </label>
+        <div style="display:flex; justify-content:flex-end; gap: 12px; margin-top: 24px;">
+          <button type="button" onclick="fecharModalCadastro()" class="btn ghost">Cancelar</button>
+          <button type="submit" class="btn submit-btn">Salvar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal hidden">
+    <div class="modal-panel" style="width: 460px;">
+      <h2 id="modalTitle" style="margin-top:0">Editar Chamado</h2>
+      <form id="editForm">
+        <input id="editId" type="hidden" />
+        <label>Solicitante<input id="editSolicitante" required /></label>
+        <label>Contato<input id="editContato" placeholder="Telefone ou e-mail" /></label>
+        <div style="display:flex; gap:12px">
+          <label style="flex:1">Setor
+            <select id="editSetor" required>
+              <option value="">--</option>
+              <option>ADM</option>
+              <option>Producao A</option>
+              <option>Producao B</option>
+              <option>Almoxarifado</option>
+            </select>
+          </label>
+          <label style="flex:1">Prioridade
+            <select id="editPrioridade">
+              <option value="baixa">Baixa</option>
+              <option value="normal" selected>Normal</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </label>
+        </div>
+        <label>Categoria
+          <select id="editCategoria" required>
+            <option value="">--</option>
+            <option value="Impressora">Impressora</option>
+            <option value="Mouse">Mouse</option>
+            <option value="Rede">Rede / Internet</option>
+            <option value="outro">Outro</option>
+          </select>
+        </label>
+        <label id="editOtherLabel" class="hidden">Descreva (Outro)<input id="editOtherText" /></label>
+        <label>Status
+          <select id="editStatus">
+            <option value="pending">Pendente</option>
+            <option value="doing">Em andamento</option>
+            <option value="done">Concluído</option>
+          </select>
+        </label>
+        <label>Descrição<textarea id="editDescricao" rows="3"></textarea></label>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
+          <button type="button" id="cancelEdit" class="btn ghost">Cancelar</button>
+          <button type="submit" class="btn">Salvar Chamado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="chatModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-panel" style="width:420px; max-width:95%; display:flex; flex-direction:column; min-height:400px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2 style="margin:0; font-size:16px;">Histórico de Interações <span id="chatModalHeaderId" style="color:var(--muted);font-weight:600;margin-left:8px">#</span></h2>
+        <button onclick="document.getElementById('chatModal').classList.add('hidden')" style="background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer">✖</button>
+      </div>
+      <div id="chatMessages" style="flex:1; overflow-y:auto; max-height:280px; padding:12px; border-radius:6px; background:linear-gradient(180deg,#051322,#061427); border:1px solid rgba(255,255,255,0.03); margin-bottom:12px"></div>
+      <form id="chatForm" style="display:flex; gap:8px">
+        <input id="chatInput" type="text" placeholder="Escreva uma mensagem..." style="margin-top:0; flex:1;" required />
+        <button type="submit" class="btn">Enviar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do LocalStorage API
+    const STORAGE_KEY = 'ompi_chamados_v1';
+    const COMMENT_KEY = 'ompi_comentarios_v1';
+    const USERS_KEY = 'ompi_usuarios_v1';
+
+    function uid(){ return Date.now().toString(36) + Math.floor(Math.random()*9000).toString(36); }
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function fmtDate(iso){ return iso ? new Date(iso).toLocaleString() : '-'; }
+
+    // Backend (Simulado 100% via LocalStorage)
+    const api = {
+      async fetchChamados() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      },
+      async createChamado(item) {
+        const arr = await this.fetchChamados();
+        if(!item.id) item.id = uid();
+        if(!item.data_abertura) item.data_abertura = new Date().toISOString();
+        if(!item.status) item.status = 'pending';
+        if(!item.prioridade) item.prioridade = 'normal';
+        arr.unshift(item); // Insere no topo
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        return item;
+      },
+      async updateChamado(id, updates) {
+        const arr = await this.fetchChamados();
+        const idx = arr.findIndex(x => String(x.id) === String(id));
+        if (idx !== -1) {
+          arr[idx] = { ...arr[idx], ...updates };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+          return arr[idx];
+        }
+      },
+      async deleteChamado(id) {
+        let arr = await this.fetchChamados();
+        arr = arr.filter(x => String(x.id) !== String(id));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      }
+    };
+
+    // Controle de Utilizadores
+    window.abrirModalCadastro = function() {
+      document.getElementById('modalCadastroUsuario').classList.remove('hidden');
+    };
+    window.fecharModalCadastro = function() {
+      document.getElementById('modalCadastroUsuario').classList.add('hidden');
+      document.getElementById('formCadastroUsuario').reset();
+    };
+    window.salvarNovoUsuario = function(event) {
+      event.preventDefault();
+      const nome = document.getElementById('cadNome').value.trim();
+      const username = document.getElementById('cadUsername').value.trim();
+      const senha = document.getElementById('cadSenha').value.trim();
+      const perfil = document.getElementById('cadPerfil').value;
+
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+      if(users.find(u => u.username === username)) return alert('Este nome de utilizador (login) já existe!');
+      
+      users.push({ id: uid(), nome, username, senha, perfil });
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      
+      alert('Usuário cadastrado com sucesso no cache local!');
+      fecharModalCadastro();
+    };
+
+    // Elementos da Interface
+    let itemsCache = [];
+    let chart = null;
+    let showOnlyOpen = false;
+    let chatChamadoId = null;
+
+    const tableBody = document.querySelector('#ticketsTable tbody');
+    const searchEl = document.getElementById('globalSearch');
+
+    function computeStats(items) {
+      const pending = items.filter(i=>i.status==='pending').length;
+      const doing = items.filter(i=>i.status==='doing').length;
+      const done = items.filter(i=>i.status==='done').length;
+      return { total: items.length, pending, doing, done };
+    }
+
+    function renderCards(items) {
+      const s = computeStats(items);
+      document.getElementById('totalCount').textContent = s.total;
+      document.getElementById('pendingCount').textContent = s.pending;
+      document.getElementById('doingCount').textContent = s.doing;
+      document.getElementById('doneCount').textContent = s.done;
+    }
+
+    function renderChart(items) {
+      const s = computeStats(items);
+      const ctx = document.getElementById('statusChart').getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Pendente', 'Em Andamento', 'Concluídos'],
+          datasets: [{
+            label: 'Volume de Chamados',
+            data: [s.pending, s.doing, s.done],
+            backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#9aa4b2' }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9aa4b2' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      const q = (searchEl.value || '').trim().toLowerCase();
+      const visible = itemsCache.filter(it => {
+        if(showOnlyOpen && it.status === 'done') return false;
+        if(!q) return true;
+        const hay = [it.id, it.solicitante, it.setor, it.categoria, it.descricao, it.status].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+
+      tableBody.innerHTML = '';
+      if(!visible.length) {
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted)">Nenhum chamado corresponde aos filtros.</td></tr>';
+        return;
+      }
+
+      visible.forEach(it => {
+        const tr = document.createElement('tr');
+        
+        let actions = `<button data-action="edit" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;">Editar</button>`;
+        actions += `<button data-action="delete" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;margin-left:4px;color:#ef4444;border-color:rgba(239,68,68,0.3)">Excluir</button>`;
+        
+        if(it.status === 'done') {
+          actions += `<button data-action="reopen" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;margin-left:4px;color:#f59e0b">Reabrir</button>`;
+        }
+        
+        actions += `<button data-action="chat" data-id="${it.id}" class="btn" style="padding:4px 8px;font-size:11px;margin-left:4px">💬 Histórico</button>`;
+
+        let translatedStatus = it.status === 'done' ? 'Concluído' : (it.status === 'doing' ? 'Em andamento' : 'Pendente');
+
+        tr.innerHTML = `
+          <td>#${escapeHtml(String(it.id).slice(-6))}</td>
+          <td style="font-weight:600">${escapeHtml(it.solicitante)}</td>
+          <td>${escapeHtml(it.setor)}</td>
+          <td>${escapeHtml(it.categoria)}</td>
+          <td><span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:10px">${escapeHtml((it.prioridade||'normal').toUpperCase())}</span></td>
+          <td>${translatedStatus}</td>
+          <td>${escapeHtml(fmtDate(it.data_abertura))}</td>
+          <td>${actions}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      // Bind eventos dinâmicos na tabela
+      document.querySelectorAll('button[data-action="edit"]').forEach(b => b.addEventListener('click', onEditClick));
+      document.querySelectorAll('button[data-action="delete"]').forEach(b => b.addEventListener('click', onDeleteClick));
+      document.querySelectorAll('button[data-action="reopen"]').forEach(b => b.addEventListener('click', onReopenClick));
+      document.querySelectorAll('button[data-action="chat"]').forEach(b => b.addEventListener('click', onChatClick));
+    }
+
+    async function refreshAll() {
+      itemsCache = await api.fetchChamados();
+      renderCards(itemsCache);
+      renderChart(itemsCache);
+      renderTable();
+    }
+
+    // Handlers de Ações da Tabela
+    function onEditClick() {
+      const id = this.getAttribute('data-id');
+      const it = itemsCache.find(x => String(x.id) === id);
+      if(!it) return;
+
+      document.getElementById('editId').value = it.id;
+      document.getElementById('editSolicitante').value = it.solicitante || '';
+      document.getElementById('editContato').value = it.contato || '';
+      document.getElementById('editSetor').value = it.setor || '';
+      
+      const catSelect = document.getElementById('editCategoria');
+      const isOther = !Array.from(catSelect.options).some(o => o.value === it.categoria);
+      if(isOther) {
+        catSelect.value = 'outro';
+        document.getElementById('editOtherLabel').classList.remove('hidden');
+        document.getElementById('editOtherText').value = it.categoria;
+      } else {
+        catSelect.value = it.categoria;
+        document.getElementById('editOtherLabel').classList.add('hidden');
+        document.getElementById('editOtherText').value = '';
+      }
+
+      document.getElementById('editPrioridade').value = it.prioridade || 'normal';
+      document.getElementById('editStatus').value = it.status || 'pending';
+      document.getElementById('editDescricao').value = it.descricao || '';
+      
+      document.getElementById('modalTitle').textContent = 'Editar Chamado';
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    async function onDeleteClick() {
+      if(!confirm('Atenção: Tem a certeza que deseja excluir permanentemente este chamado?')) return;
+      await api.deleteChamado(this.getAttribute('data-id'));
+      refreshAll();
+    }
+
+    async function onReopenClick() {
+      await api.updateChamado(this.getAttribute('data-id'), { status: 'pending', data_conclusao: null });
+      refreshAll();
+    }
+
+    // Modal Create / Edit Submission
+    document.getElementById('editCategoria').addEventListener('change', function() {
+      if(this.value === 'outro') { document.getElementById('editOtherLabel').classList.remove('hidden'); }
+      else { document.getElementById('editOtherLabel').classList.add('hidden'); }
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', () => {
+      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('editForm').reset();
+    });
+
+    document.getElementById('openCreate').addEventListener('click', () => {
+      document.getElementById('editForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('modalTitle').textContent = 'Novo Chamado';
+      document.getElementById('editStatus').value = 'pending';
+      document.getElementById('editModal').classList.remove('hidden');
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const catSelect = document.getElementById('editCategoria').value;
+      
+      const payload = {
+        solicitante: document.getElementById('editSolicitante').value,
+        contato: document.getElementById('editContato').value,
+        setor: document.getElementById('editSetor').value,
+        categoria: catSelect === 'outro' ? document.getElementById('editOtherText').value : catSelect,
+        prioridade: document.getElementById('editPrioridade').value,
+        status: document.getElementById('editStatus').value,
+        descricao: document.getElementById('editDescricao').value
+      };
+
+      if (id) { await api.updateChamado(id, payload); } 
+      else { await api.createChamado(payload); }
+      
+      document.getElementById('editModal').classList.add('hidden');
+      refreshAll();
+    });
+
+    // Filtros e Exportação XLSX (ExcelJS em ação no Client-Side)
+    searchEl.addEventListener('input', renderTable);
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+    document.getElementById('filterOpenBtn').addEventListener('click', function() {
+      showOnlyOpen = !showOnlyOpen;
+      this.textContent = showOnlyOpen ? 'Mostrar Todos' : 'Somente Abertos';
+      this.classList.toggle('ghost', !showOnlyOpen);
+      renderTable();
+    });
+
+    document.getElementById('exportCsv').addEventListener('click', async () => {
+      if(!itemsCache.length) return alert('Não existem dados para exportar.');
+      
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Relatório SLA');
+      
+      sheet.columns = [
+        { header: 'Ticket ID', key: 'id', width: 12 },
+        { header: 'Solicitante', key: 'solicitante', width: 20 },
+        { header: 'Setor', key: 'setor', width: 15 },
+        { header: 'Categoria', key: 'categoria', width: 20 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Prioridade', key: 'prioridade', width: 15 },
+        { header: 'Abertura (Data/Hora)', key: 'abertura', width: 22 },
+        { header: 'Descrição do Problema', key: 'descricao', width: 40 }
+      ];
+
+      itemsCache.forEach(it => {
+        sheet.addRow({
+          id: String(it.id).slice(-6).toUpperCase(),
+          solicitante: it.solicitante,
+          setor: it.setor,
+          categoria: it.categoria,
+          status: it.status,
+          prioridade: (it.prioridade || 'normal').toUpperCase(),
+          abertura: fmtDate(it.data_abertura),
+          descricao: it.descricao
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `SLA_Admin_SAVEdesk_${new Date().toISOString().slice(0,10)}.xlsx`;
+      link.click();
+    });
+
+    // Sistema de Chat Integrado
+    function onChatClick() {
+      chatChamadoId = String(this.getAttribute('data-id'));
+      document.getElementById('chatModalHeaderId').textContent = '#' + chatChamadoId.slice(-6);
+      document.getElementById('chatModal').classList.remove('hidden');
+      loadMessages();
+    }
+
+    function loadMessages() {
+      if(!chatChamadoId) return;
+      const list = document.getElementById('chatMessages');
+      const allComments = JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]');
+      const msgs = allComments.filter(m => String(m.chamado_id) === chatChamadoId);
+      
+      list.innerHTML = '';
+      if(!msgs.length) {
+        list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Nenhum registo de interação.</div>';
+        return;
+      }
+      
+      const adminUser = localStorage.getItem('ompi_current_user') || 'Admin Geral';
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        const isMe = String(m.autor).toLowerCase().includes(adminUser.toLowerCase()) || String(m.autor).toLowerCase().includes('admin');
+        div.className = 'chat-msg ' + (isMe ? 'me' : 'other');
+        div.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;opacity:0.8">${escapeHtml(m.autor)} • ${new Date(m.data_envio).toLocaleTimeString()}</div><div>${escapeHtml(m.mensagem)}</div>`;
+        list.appendChild(div);
+      });
+      list.scrollTop = list.scrollHeight;
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if(!text || !chatChamadoId) return;
+      
+      const allComments = JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]');
+      allComments.push({
+        id: uid(),
+        chamado_id: chatChamadoId,
+        autor: localStorage.getItem('ompi_current_user') || 'Admin Geral',
+        mensagem: text,
+        data_envio: new Date().toISOString()
+      });
+      localStorage.setItem(COMMENT_KEY, JSON.stringify(allComments));
+      
+      input.value = '';
+      loadMessages();
+    });
+
+    // Init Engine
+    refreshAll();
+  
+  </script>
+</body>
+</html>

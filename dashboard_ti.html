@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tec&Nova — Dashboard Técnico</title>
+  <title>SAVEdesk — Dashboard Técnico</title>
   <style>
     :root{ --bg:#071023; --panel:#08182a; --muted:#9aa4b2; --accent:#2e7be6; --ok:#2aa56a }
     html,body{height:100%;margin:0;font-family:Inter,Segoe UI,system-ui,Arial;background:linear-gradient(180deg,#03121a,#071422);color:#e6eef8}
@@ -11,328 +11,316 @@
     .user-header{display:flex;align-items:center;justify-content:space-between}
     .brand{display:flex;gap:12px;align-items:center}
     .controls{display:flex;gap:8px}
-    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight: 600;}
+    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight: 600}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
 
-    .kanban-area{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
-    .kanban-column{background:linear-gradient(180deg,#071722,#061422);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
-    .kanban-column h3{margin:0 0 8px 0}
-    .kanban-list{min-height:120px}
-    .kanban-card{background:#071a2b;padding:10px;margin-bottom:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:grab}
-    .kanban-card.dragging{opacity:0.6}
-    .kanban-card .meta{font-size:12px;color:var(--muted);margin-top:8px}
-    .timestamps{font-size:11px;color:var(--muted);margin-top:6px}
+    .kanban-area{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+    @media (max-width:820px){ .kanban-area{grid-template-columns:1fr} }
+    
+    .col{background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.03)}
+    .col-title{font-size:15px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;display:flex;justify-content:between;color:var(--muted);font-weight:700}
+    .col-count{background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;font-size:12px;margin-left:auto;color:#fff}
+    
+    .cards-stack{display:flex;flex-direction:column;gap:10px;min-height:200px}
+    
+    .card{background:#0e2238;border-radius:8px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);border-left:4px solid #fff;border-top:1px solid rgba(255,255,255,0.02)}
+    .card.prio-baixa{border-left-color:#5c7cfa}
+    .card.prio-normal{border-left-color:#22b8cf}
+    .card.prio-alta{border-left-color:#f59e0b}
+    .card.prio-urgente{border-left-color:#fa5252}
 
-    .modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.8);z-index: 100;}
+    .card-id{color:var(--muted);font-weight:700;font-size:13px}
+    .card-title{font-weight:600;font-size:15px;margin:4px 0}
+    .card-desc{font-size:13px;color:#b2c0d4;margin:6px 0}
+    .card-meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin-top:8px}
+    
+    .card-actions{display:flex;gap:6px;margin-top:10px;border-top:1px solid rgba(255,255,255,0.04);padding-top:8px}
+    .btn-sm{padding:4px 8px;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-weight:600;background:rgba(255,255,255,0.06);color:#fff}
+    .btn-sm:hover{background:rgba(255,255,255,0.12)}
+    
+    .modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.85);z-index:100}
     .modal.hidden{display:none}
-    .modal-panel{background:linear-gradient(180deg,#071428,#08182a);padding:24px;border-radius:10px;min-width:400px;color:#dfe9f8;border:1px solid rgba(255,255,255,0.1);box-shadow: 0 10px 25px rgba(0,0,0,0.5)}
-    
-    /* Ajustes solicitados nos campos de seleção/entrada */
-    #addForm label { display: block; margin-top: 12px; font-size: 14px; color: #9fb2d9; }
-    
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box; /* Garante que o padding não quebre a largura */
-      
-      /* Cores solicitadas */
-      background-color: #ffffff !important; 
-      color: #000000 !important;
-      font-weight: 500;
-    }
-
-    textarea { resize: vertical; }
-    .hidden { display: none; }
-
+    .modal-panel{background:var(--panel);padding:20px;border-radius:10px;min-width:300px;color:#dfe9f8;border:1px solid rgba(255,255,255,0.06);box-shadow:0 12px 36px rgba(0,0,0,0.6)}
+    select, input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:#fff;color:#071023}
+    label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
   </style>
-  </head>
-  <body>
-  <!-- header removido conforme solicitação (navegação superior ocultada) -->
-  <main class="user-wrap">
-    <header class="user-header">
+</head>
+<body>
+
+  <div class="user-wrap">
+    <div class="user-header">
       <div class="brand">
-        <img src="Logo.svg" alt="Logo Tec&Nova" style="width: 40px; height: 40px; border-radius: 16px;">
+        <img src="Logo.svg" alt="Tec&Nova" style="width:40px;height:40px;border-radius:50%;background:#fff;padding:4px"/>
         <div>
-          <h1 id="loginTitle" style="margin:0">Tec&Nova</h1>
-          <p style="margin:0;color:#9fb2d9">Dashboard Técnico</p>
+          <h1 style="margin:0;font-size:18px">SAVEdesk</h1>
+          <div style="font-size:12px;color:var(--muted)">Painel Técnico de Monitoramento de SLAs</div>
         </div>
       </div>
-
       <div class="controls">
-        <button id="openAddBtn" class="btn">Adicionar chamado</button>
-        <button id="exportCsvBtn" class="btn ghost">Exportar CSV</button>
-        <button id="resetBtn" class="btn ghost">Resetar Sistema</button>
-      </div>
-    </header>
-
-    <section class="kanban-area">
-  <div class="kanban-column" data-status="pending">
-        <h3>Pendente</h3>
-  <div class="kanban-list" data-status="pending"></div>
-      </div>
-
-      <div class="kanban-column" data-status="doing">
-        <h3>Em Andamento</h3>
-        <div class="kanban-list" data-status="doing"></div>
-      </div>
-
-      <div class="kanban-column" data-status="done">
-        <h3>Concluído</h3>
-        <div class="kanban-list" data-status="done"></div>
-      </div>
-    </section>
-
-    <div id="addModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle">
-      <div class="modal-panel">
-        <h2 id="addTitle" style="margin-top:0">Novo Chamado</h2>
-        <form id="addForm">
-          <label>Solicitante
-            <input id="author" type="text" placeholder="Seu nome" required />
-          </label>
-
-          <label>Setor
-            <select id="setor">
-              <option value="">-- Escolha --</option>
-              <option value="Producao A">Produção A</option>
-              <option value="Producao B">Produção B</option>
-              <option value="ADM">ADM</option>
-              <option value="Almoxarifado">Almoxarifado</option>
-            </select>
-          </label>
-
-          <label>Tipo de problema
-                <select id="issueType" required>
-              <option value="">-- Escolha --</option>
-              <option value="mouse">Mouse</option>
-              <option value="senha">Senha</option>
-              <option value="impressora">Impressora</option>
-              <option value="rede">Rede</option>
-              <option value="outro">Outro</option>
-            </select>
-          </label>
-
-              <label id="otherLabel" class="hidden">Descreva (Outro)
-                <input id="otherText" placeholder="Descreva o problema" />
-              </label>
-              <div id="addFormFeedback" class="helper hidden" style="margin-top:8px;color:#f8d7da;background:rgba(248,215,218,0.06);padding:8px;border-radius:6px"></div>
-
-          <label>Prioridade
-            <select id="priority">
-              <option value="normal">Normal</option>
-              <option value="alta">Alta</option>
-              <option value="baixa">Baixa</option>
-            </select>
-          </label>
-
-          <label>Descrição
-            <textarea id="description" rows="3" placeholder="Informações adicionais (opcional)"></textarea>
-          </label>
-
-          <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
-            <button type="button" id="cancelAdd" class="btn ghost">Cancelar</button>
-            <button type="submit" class="btn">Criar chamado</button>
-          </div>
-        </form>
+        <button id="clearDevBtn" class="btn ghost" style="border-color:rgba(250,82,82,0.3);color:#fa5252">⚠️ Limpar Dados (Dev)</button>
       </div>
     </div>
-  </main>
+
+    <div class="kanban-area">
+      <div class="col">
+        <div class="col-title">Pendentes <span class="col-count" id="count-pending">0</span></div>
+        <div class="cards-stack" id="stack-pending"></div>
+      </div>
+
+      <div class="col">
+        <div class="col-title">Em Andamento <span class="col-count" id="count-doing">0</span></div>
+        <div class="cards-stack" id="stack-doing"></div>
+      </div>
+
+      <div class="col">
+        <div class="col-title">Concluídos <span class="col-count" id="count-done">0</span></div>
+        <div class="cards-stack" id="stack-done"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="triageModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700">Triagem do Chamado</div>
+        <button onclick="(function(){document.getElementById('triageModal').classList.add('hidden')})()" style="background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer">✖</button>
+      </div>
+      <label>Prioridade
+        <select id="triagemPrioridade">
+          <option value="baixa">baixa</option>
+          <option value="normal">normal</option>
+          <option value="alta">alta</option>
+          <option value="urgente">urgente</option>
+        </select>
+      </label>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button type="button" onclick="(function(){document.getElementById('triageModal').classList.add('hidden')})()" class="btn ghost">Cancelar</button>
+        <button type="button" id="triageSaveBtn" class="btn" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="chatModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-panel" style="width:420px;max-width:95%;display:flex;flex-direction:column;min-height:350px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700">Histórico de Interações <span id="chatModalHeaderId" style="color:var(--muted);font-weight:600;margin-left:8px">#</span></div>
+        <button onclick="(function(){document.getElementById('chatModal').classList.add('hidden')})()" style="background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer">✖</button>
+      </div>
+      <div id="chatMessages" style="flex:1;overflow-y:auto;max-height:240px;padding:8px;border-radius:6px;background:linear-gradient(180deg,#051322,#061427);border:1px solid rgba(255,255,255,0.03);margin-bottom:8px">Nenhuma mensagem.</div>
+      <form id="chatForm" style="display:flex;gap:8px">
+        <input id="chatInput" type="text" placeholder="Responder para o operador..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#fff;color:#0b1220" required />
+        <button type="submit" class="btn" style="background:var(--accent);color:#fff;padding:8px 12px;">Enviar</button>
+      </form>
+    </div>
+  </div>
 
   <script>
     (function(){
-      // simple access control: require login
-      if(!localStorage.getItem('ompi_current_user')){ location.href = 'index.html'; return; }
-      const STORAGE_KEY = 'ompi_chamados_db';
-  const lists = document.querySelectorAll('.kanban-list');
-  const openBtn = document.getElementById('openAddBtn');
-  const modal = document.getElementById('addModal');
-  const cancelBtn = document.getElementById('cancelAdd');
-  const addForm = document.getElementById('addForm');
-  const resetBtn = document.getElementById('resetBtn');
-  const issueTypeEl = document.getElementById('issueType');
-  const otherLabel = document.getElementById('otherLabel');
+      function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"})[c]); }
+      
+      const STORAGE_KEY = 'ompi_chamados_v1';
+      const COMMENT_KEY = 'ompi_comentarios_v1';
+      
+      function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
+      function save(arr){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){} }
+      function loadComentarios(){ try{ return JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]'); }catch(e){ return []; } }
+      function saveComentarios(arr){ try{ localStorage.setItem(COMMENT_KEY, JSON.stringify(arr)); }catch(e){} }
 
-  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-  function currentUser(){ return localStorage.getItem('ompi_current_user') || localStorage.getItem('ompi_user_name') || ''; }
-      function load(){ try{ const raw = localStorage.getItem(STORAGE_KEY); return raw? JSON.parse(raw): []; }catch(e){ return []; } }
-      function save(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+      let data = [];
+      let currentTriageId = null;
+      let chatChamadoId = null;
 
-      let data = load();
+      function render(){
+        const pendingStack = document.getElementById('stack-pending');
+        const doingStack = document.getElementById('stack-doing');
+        const doneStack = document.getElementById('stack-done');
 
-      if(openBtn) openBtn.addEventListener('click', ()=>{
-        // reset form state when opening to ensure listeners and validation start clean
-  if(addForm) addForm.reset();
-  if(otherLabel) otherLabel.classList.add('hidden');
-  const otherTextEl = document.getElementById('otherText'); if(otherTextEl) otherTextEl.required = false;
-  const fb = document.getElementById('addFormFeedback'); if(fb){ fb.classList.add('hidden'); fb.textContent=''; }
-  const authorEl = document.getElementById('author'); if(authorEl) authorEl.value = currentUser();
-        if(modal) modal.classList.remove('hidden');
-      });
-      if(cancelBtn) cancelBtn.addEventListener('click', ()=>{
-  if(modal) modal.classList.add('hidden');
-  if(addForm) addForm.reset();
-  if(otherLabel) otherLabel.classList.add('hidden');
-  const otherTextEl2 = document.getElementById('otherText'); if(otherTextEl2) otherTextEl2.required = false; otherTextEl2 && (otherTextEl2.value='');
-  const fb = document.getElementById('addFormFeedback'); if(fb){ fb.classList.add('hidden'); fb.textContent=''; }
-      });
+        pendingStack.innerHTML = '';
+        doingStack.innerHTML = '';
+        doneStack.innerHTML = '';
 
-      // inicializa visibilidade do campo 'other' de acordo com o valor atual da categoria
-      if(issueTypeEl){
-        const otherTextEl_init = document.getElementById('otherText');
-        if(issueTypeEl.value === 'outro'){ if(otherLabel) otherLabel.classList.remove('hidden'); if(otherTextEl_init) otherTextEl_init.required = true; } else { if(otherLabel) otherLabel.classList.add('hidden'); if(otherTextEl_init) otherTextEl_init.required = false; }
-        issueTypeEl.addEventListener('change', ()=>{
-          const otherTextEl = document.getElementById('otherText');
-          if(issueTypeEl.value==='outro'){
-            if(otherLabel) otherLabel.classList.remove('hidden');
-            if(otherTextEl) otherTextEl.required = true;
-          } else {
-            if(otherLabel) otherLabel.classList.add('hidden');
-            if(otherTextEl) { otherTextEl.required = false; otherTextEl.value = ''; }
+        let counts = { pending: 0, doing: 0, done: 0 };
+
+        data.forEach(it => {
+          const status = String(it.status || 'pending').toLowerCase();
+          const card = document.createElement('div');
+          const prioClass = String(it.prioridade || 'normal').toLowerCase();
+          card.className = `card prio-${prioClass}`;
+          
+          const shortId = String(it.id || '').slice(-6);
+          const feedbackText = it.feedback_rating ? `<div style="margin-top:6px;color:#63e6be;font-size:12px">⭐️ <b>Nota: ${it.feedback_rating}/5</b> ${it.feedback_comment ? `<i>"${it.feedback_comment}"</i>` : ''}</div>` : '';
+
+          card.innerHTML = `
+            <div style="display:flex;justify-content:between;align-items:center">
+              <span class="card-id">#${escapeHtml(shortId)}</span>
+              <span style="font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;color:var(--muted)">${escapeHtml(it.setor)}</span>
+            </div>
+            <div class="card-title">${escapeHtml(it.categoria)}</div>
+            <div class="card-desc">${escapeHtml(it.descricao || 'Sem descrição adicional.')}</div>
+            <div style="font-size:11px;color:var(--muted)">Solicitante: <b>${escapeHtml(it.solicitante)}</b></div>
+            ${feedbackText}
+            <div class="card-actions" id="actions-${it.id}"></div>
+          `;
+
+          const actionsArea = card.querySelector(`#actions-${it.id}`);
+
+          const chatBtn = document.createElement('button');
+          chatBtn.className = 'btn-sm';
+          chatBtn.textContent = '💬 Chat';
+          chatBtn.addEventListener('click', () => openChat(it.id));
+          actionsArea.appendChild(chatBtn);
+
+          if(status === 'pending'){
+            counts.pending++;
+            
+            const prioBtn = document.createElement('button');
+            prioBtn.className = 'btn-sm';
+            prioBtn.textContent = '⚙️ Triagem';
+            prioBtn.addEventListener('click', () => openTriage(it.id, it.prioridade));
+            actionsArea.appendChild(prioBtn);
+
+            const startBtn = document.createElement('button');
+            startBtn.className = 'btn-sm';
+            startBtn.style.background = 'var(--accent)';
+            startBtn.textContent = 'Atender ➔';
+            startBtn.addEventListener('click', () => updateStatus(it.id, 'doing'));
+            actionsArea.appendChild(startBtn);
+
+            pendingStack.appendChild(card);
+          } 
+          else if(status === 'doing'){
+            counts.doing++;
+
+            const finishBtn = document.createElement('button');
+            finishBtn.className = 'btn-sm';
+            finishBtn.style.background = 'var(--ok)';
+            finishBtn.textContent = 'Concluir ✓';
+            finishBtn.addEventListener('click', () => updateStatus(it.id, 'done'));
+            actionsArea.appendChild(finishBtn);
+
+            doingStack.appendChild(card);
+          } 
+          else if(status === 'done'){
+            counts.done++;
+            card.style.opacity = '0.8';
+            doneStack.appendChild(card);
           }
         });
+
+        document.getElementById('count-pending').textContent = counts.pending;
+        document.getElementById('count-doing').textContent = counts.doing;
+        document.getElementById('count-done').textContent = counts.done;
       }
 
-      if(addForm) addForm.addEventListener('submit', (e)=>{
-  e.preventDefault();
-  const fb = document.getElementById('addFormFeedback'); if(fb){ fb.classList.add('hidden'); fb.textContent=''; }
-        const authorEl = document.getElementById('author');
-        const solicitante = authorEl ? authorEl.value.trim() : '';
-        const setorEl = document.getElementById('setor');
-        const setor = setorEl ? (setorEl.value || 'ADM') : 'ADM';
-        const tipo = issueTypeEl ? issueTypeEl.value : '';
-        // se tipo == 'outro', pegue o texto de otherText; caso contrário use description
-        const otherTextEl = document.getElementById('otherText');
-        const descEl = document.getElementById('description');
-        const descricao = (tipo === 'outro') ? (otherTextEl ? otherTextEl.value.trim() : '') : (descEl ? descEl.value.trim() : '');
-        const prioEl = document.getElementById('priority');
-        const prioridade = prioEl ? (prioEl.value || 'normal') : 'normal';
-  if(!solicitante || !tipo){ if(fb){ fb.textContent='Preencha solicitante e tipo.'; fb.classList.remove('hidden'); } else alert('Preencha solicitante e tipo.'); return; }
-  // se for outro, exige descrição no otherText
-  if(tipo === 'outro' && !descricao){ if(fb){ fb.textContent='Por favor descreva o problema em "Descreva (Outro)".'; fb.classList.remove('hidden'); otherTextEl && otherTextEl.focus(); } else { if(otherTextEl) otherTextEl.focus(); alert('Por favor descreva o problema.'); } return; }
-        
-        const item = { 
-          id: uid(), 
-          solicitante: solicitante, 
-          setor: setor, 
-          categoria: tipo.charAt(0).toUpperCase()+tipo.slice(1), 
-          descricao: descricao, 
-          prioridade: prioridade, 
-          status: 'pending', 
-          data_abertura: new Date().toISOString(), 
-          data_inicio: null, 
-          data_conclusao: null 
-        };
-        
-        data.unshift(item); 
-        save(data); 
-        render(); 
-        addForm.reset(); 
-        modal.classList.add('hidden');
+      function updateStatus(id, nextStatus){
+        const idx = data.findIndex(x => String(x.id) === String(id));
+        if(idx !== -1){
+          data[idx].status = nextStatus;
+          if(nextStatus === 'doing') data[idx].data_inicio = new Date().toISOString();
+          if(nextStatus === 'done') data[idx].data_conclusao = new Date().toISOString();
+          save(data);
+          render();
+        }
+      }
+
+      function openTriage(id, currentPrio){
+        currentTriageId = id;
+        document.getElementById('triagemPrioridade').value = currentPrio || 'normal';
+        document.getElementById('triageModal').classList.remove('hidden');
+      }
+
+      document.getElementById('triageSaveBtn').addEventListener('click', () => {
+        if(!currentTriageId) return;
+        const nextPrio = document.getElementById('triagemPrioridade').value;
+        const idx = data.findIndex(x => String(x.id) === String(currentTriageId));
+        if(idx !== -1){
+          data[idx].prioridade = nextPrio;
+          save(data);
+          render();
+        }
+        document.getElementById('triageModal').classList.add('hidden');
       });
 
-      function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
-
-      function createCard(item){
-        const el = document.createElement('div'); 
-        el.className='kanban-card'; 
-        el.draggable=true; 
-        el.dataset.id = item.id;
-        
-        const prioStyle = item.prioridade === 'alta' ? 'color:#ff6b6b' : (item.prioridade === 'baixa' ? 'color:#74c0fc' : 'color:#9aa4b2');
-        
-        el.innerHTML = `
-          <strong>${escapeHtml(item.categoria)}</strong>
-          <span style="font-size:10px; float:right; ${prioStyle}">${item.prioridade.toUpperCase()}</span>
-          <div style="margin-top:6px; font-size:13px">${escapeHtml(item.descricao)}</div>
-          <div style="margin-top:6px;font-size:12px;color:#cfe3ff">status (raw): ${escapeHtml(item.status||'')}</div>
-          <div class="meta">${escapeHtml(item.solicitante)}  ${escapeHtml(item.setor)}</div>
-          <div class="timestamps">
-            <small>Abertura: ${new Date(item.data_abertura).toLocaleString()}</small><br/>
-            <small>Início: ${item.data_inicio ? new Date(item.data_inicio).toLocaleString() : '-'}</small><br/>
-            <small>Conclusão: ${item.data_conclusao ? new Date(item.data_conclusao).toLocaleString() : '-'}</small>
-          </div>`;
-        return el;
+      function openChat(id){
+        chatChamadoId = String(id);
+        document.getElementById('chatModalHeaderId').textContent = '#' + String(chatChamadoId).slice(-6);
+        document.getElementById('chatModal').classList.remove('hidden');
+        carregarMensagens();
       }
 
-      function render(){ 
-        lists.forEach(l=> l.innerHTML=''); 
-        console.debug('render dashboard: data=', data);
-        data.forEach(item=>{
-    let target = item.status === 'doing' ? 'doing' : (item.status === 'done' ? 'done' : 'pending');
-          const container = document.querySelector(`.kanban-list[data-status="${target}"]`);
-          if(container) container.appendChild(createCard(item));
-        }); 
-        attachHandlers(); 
-      }
-
-      let dragged=null;
-      function attachHandlers(){
-        document.querySelectorAll('.kanban-card').forEach(card=>{
-          card.addEventListener('dragstart', onDragStart); 
-          card.addEventListener('dragend', onDragEnd);
+      function carregarMensagens(){
+        if(!chatChamadoId) return;
+        const listEl = document.getElementById('chatMessages');
+        const msgs = loadComentarios().filter(c => String(c.chamado_id) === String(chatChamadoId));
+        listEl.innerHTML = '';
+        
+        if(!msgs.length) { listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding-top:20px;">Nenhuma mensagem enviada.</div>'; return; }
+        
+        msgs.forEach(m => {
+          const div = document.createElement('div');
+          div.style.marginBottom = '8px';
+          div.style.maxWidth = '80%';
+          
+          if(String(m.autor).toLowerCase().includes('tecnico') || String(m.autor).toLowerCase().includes('admin')){
+            div.style.marginLeft = 'auto';
+            div.style.background = 'var(--accent)';
+            div.style.color = '#fff';
+            div.style.padding = '8px 10px';
+            div.style.borderRadius = '10px 10px 6px 10px';
+          } else {
+            div.style.background = 'rgba(255,255,255,0.06)';
+            div.style.color = '#eaf2ff';
+            div.style.padding = '8px 10px';
+            div.style.borderRadius = '10px 10px 10px 6px';
+          }
+          div.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:2px">${escapeHtml(m.autor)} • ${new Date(m.data_envio).toLocaleTimeString()}</div><div>${escapeHtml(m.mensagem)}</div>`;
+          listEl.appendChild(div);
         });
-        lists.forEach(list=>{ 
-          list.addEventListener('dragover', onDragOver); 
-          list.addEventListener('drop', onDrop); 
-        });
-      }
-      
-      function onDragStart(e){ dragged=this; this.classList.add('dragging'); e.dataTransfer.setData('text/plain', this.dataset.id); }
-      function onDragEnd(){ this.classList.remove('dragging'); dragged=null; }
-      function onDragOver(e){ e.preventDefault(); }
-      
-      function onDrop(e){ 
-        e.preventDefault(); 
-        const id = e.dataTransfer.getData('text/plain'); 
-        const it = data.find(d=>d.id===id); 
-        if(!it) return; 
-        
-        const newStatus = this.dataset.status;
-        it.status = newStatus;
-        
-        if(newStatus === 'doing' && !it.data_inicio) it.data_inicio = new Date().toISOString();
-        if(newStatus === 'done' && !it.data_conclusao) it.data_conclusao = new Date().toISOString();
-        
-        save(data); 
-        render(); 
+        listEl.scrollTop = listEl.scrollHeight;
       }
 
-      if(resetBtn) resetBtn.addEventListener('click', ()=>{ 
-        if(!confirm('Remover todos os chamados?')) return; 
+      document.getElementById('chatForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text || !chatChamadoId) return;
+
+        const todos = loadComentarios();
+        todos.push({
+          id: Date.now().toString(36),
+          chamado_id: chatChamadoId,
+          autor: localStorage.getItem('ompi_current_user') || 'Técnico de TI',
+          mensagem: text,
+          data_envio: new Date().toISOString()
+        });
+        saveComentarios(todos);
+
+        input.value = '';
+        carregarMensagens();
+      });
+
+      document.getElementById('clearDevBtn').addEventListener('click', ()=>{ 
+        if(!confirm('Remover definitivamente todos os chamados e logs do navegador?')) return; 
         localStorage.removeItem(STORAGE_KEY); 
+        localStorage.removeItem(COMMENT_KEY);
         data = []; 
         render(); 
       });
 
       setInterval(()=>{ 
         const newData = load();
-        if(JSON.stringify(newData) !== JSON.stringify(data)){ data = newData; render(); } 
-      }, 5000);
+        if(JSON.stringify(newData) !== JSON.stringify(data)){ 
+          data = newData; 
+          render(); 
+          if(document.getElementById('chatModal').classList.contains('hidden') === false){
+            carregarMensagens();
+          }
+        } 
+      }, 1500);
 
+      // Inicialização da Aplicação
+      data = load();
       render();
-    
-      // CSV export for dashboard
-      function toCsv(items){
-        if(!items || !items.length) return '';
-        const keys = ['id','solicitante','setor','categoria','descricao','prioridade','status','data_abertura','data_inicio','data_conclusao'];
-        const header = keys.join(',');
-        const lines = items.map(it => keys.map(k => '"'+(String(it[k]||'')).replace(/"/g,'""')+'"').join(','));
-        return [header].concat(lines).join('\n');
-      }
-
-      const exportBtn = document.getElementById('exportCsvBtn');
-      if(exportBtn){
-        exportBtn.addEventListener('click', ()=>{
-          const arr = load();
-          if(!arr || !arr.length) return alert('Nenhum chamado para exportar.');
-          const csv = toCsv(arr);
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'ompi_chamados_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-        });
-      }
     })();
   </script>
 </body>

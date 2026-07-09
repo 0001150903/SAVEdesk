@@ -1,10 +1,9 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Tec&Nova — Abertura Rápida</title>
+	<title>SAVEdesk — Dashboard do Usuário</title>
 	<style>
 		/* Consolidated industrial style (from user.css + site) */
 		:root{ --bg:#0f1720; --panel:#0f1728; --muted:#9aa4b2; --accent:#4f7bd6; --accent-2:#f28a30; --card:#0b1220; --ok:#2aa56a; }
@@ -13,240 +12,424 @@
 		.user-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 		.brand{display:flex;gap:14px;align-items:center}
 		.brand h1{margin:0;font-size:20px;letter-spacing:0.6px}
-		/* quick-actions removido (botões de acesso rápido) */
+		.card{background:linear-gradient(180deg,#06262f,#07212b);border-radius:10px;padding:16px;color:#e6f6ff;box-shadow:0 8px 22px rgba(0,0,0,0.45);margin-bottom:0;transition:transform .15s ease,box-shadow .15s ease;display:flex;flex-direction:column;justify-content:space-between;}
+		.card:hover{transform:translateY(-6px);box-shadow:0 14px 30px rgba(0,0,0,0.6)}
 
-		/* modal/form */
-		.modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6)}
+		/* grid with fixed columns on large screens so cards keep their visual size even if few items */
+		#cardsRoot{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:12px;margin-top:12px;justify-items:stretch}
+		@media (max-width:980px){
+			#cardsRoot{grid-template-columns:repeat(2,minmax(220px,1fr));}
+		}
+		@media (max-width:600px){
+			#cardsRoot{grid-template-columns:1fr;}
+		}
+		/* card size control: keep a consistent min height so cards look the same even if few exist */
+		.card{min-height:320px}
+
+		/* buttons */
+		.btn{border:none;cursor:pointer;font-weight:600;padding:8px 10px;border-radius:8px;background:transparent;color:inherit}
+		.btn-chat{background:linear-gradient(90deg,#4f7bd6,#76b0ff);color:#fff;border-radius:10px;padding:8px 12px;box-shadow:0 6px 18px rgba(79,123,214,0.18);border:1px solid rgba(255,255,255,0.06)}
+		.btn-chat:hover{filter:brightness(1.03);transform:translateY(-1px)}
+		.card .id{color:#f5a623;font-weight:700}
+		.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:13px}
+		/* status colors: pendente = vermelho, em andamento = amarelo, concluído = verde */
+		.badge.pending{background:#ef4444;color:#fff}
+		.badge.doing{background:#f59e0b;color:#0b1220}
+		.badge.done{background:#10b981;color:#fff}
+		.meta{font-size:13px;color:#b9d2ea;margin-top:8px}
+		
+		/* modal */
+		.modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.8);z-index:100}
 		.modal.hidden{display:none}
-		.hidden{display:none}
-		.modal-panel{background:linear-gradient(180deg,#071428,#08182a);padding:18px;border-radius:10px;min-width:320px;color:#dfe9f8;border:1px solid rgba(255,255,255,0.04)}
-		form label{display:block;font-size:13px;margin-bottom:8px;color:var(--muted)}
-		input,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#eaf2ff;margin-top:6px}
-		/* make select dropdown text readable: dark text on light background */
-		select{width:100%;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.08);background:#fff;color:#0b1220;margin-top:6px}
-		select option{color:#0b1220;background:#fff}
-		.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-		.btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
-		.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
-
-		/* acompanhamento */
-		.follow-area{margin-top:20px}
-		.follow-title{font-size:16px;color:#cfe3ff;margin-bottom:8px}
-		.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-		.card{background:linear-gradient(180deg,#071825,#06202d);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
-		.card .id{font-weight:700;color:var(--accent-2)}
-		.meta{font-size:13px;color:var(--muted);margin-top:6px}
-		.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;color:#fff}
-		.badge.pending{background:#6b7280} /* gray */
-		.badge.doing{background:var(--accent)} /* blue */
-		.badge.done{background:var(--ok)} /* green */
-
-		footer{margin-top:26px;font-size:12px;color:var(--muted)}
-		@media (max-width:560px){ .user-header{flex-direction:column;align-items:flex-start;gap:12px} }
+		.modal-panel{background:linear-gradient(180deg,#071428,#08182a);padding:20px;border-radius:10px;min-width:320px;color:#dfe9f8;border:1px solid rgba(255,255,255,0.06);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+		input,select,textarea{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:#fff;color:#0b1220}
+		.helper{color:#f8d7da;background:#2b0a0b;padding:8px;border-radius:6px;margin-top:8px;display:none}
+		
+		/* Classe utilitária para esconder elementos ocultos de verdade */
+		.hidden-element { display: none !important; }
+		
+		@media (max-width:520px){ .user-wrap{margin:12px;padding:12px} }
 	</style>
 </head>
-	<body>
-	<!-- header removido conforme solicitação (navegação superior ocultada) -->
-	<main class="user-wrap">
-		<header class="user-header">
+<body>
+	<div class="user-wrap">
+		<div class="user-header">
 			<div class="brand">
-				<img src="Logo.svg" alt="Logo Tec&Nova" style="width: 44px; height: 44px; border-radius: 8px;">
+				<img src="Logo.svg" alt="Tec&Nova" style="width:46px;height:46px;border-radius:50%;background:#fff;padding:6px"/>
 				<div>
-					<h1>Tec&Nova</h1>
-					<p style="margin:0;color:var(--muted);font-size:13px">Abertura Rápida de Chamados</p>
+					<h1>SAVEdesk</h1>
+					<div style="font-size:13px;color:var(--muted)">Abertura Rápida de Chamados</div>
 				</div>
 			</div>
-
-			<!-- Ações rápidas removidas -->
-		</header>
-
-		<!-- Add modal (formulário de abertura) -->
-		<div id="addModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle">
-			<div class="modal-panel">
-				<h2 id="addTitle">Novo Chamado</h2>
-				<form id="addForm">
-					<label>Solicitante
-						<input id="author" type="text" placeholder="Seu nome" />
-					</label>
-
-					<label>Setor
-						<select id="setor" required>
-							<option value="">-- Escolha --</option>
-							<option value="Producao A">Produção A</option>
-							<option value="Producao B">Produção B</option>
-							<option value="ADM">ADM</option>
-							<option value="Almoxarifado">Almoxarifado</option>
-							<option value="outro">Outro</option>
-						</select>
-					</label>
-
-					<label>Categoria
-						<select id="issueType">
-							<option value="">-- Escolha --</option>
-							<option value="impressora">Impressora</option>
-							<option value="mouse">Mouse</option>
-							<option value="senha">Senha</option>
-							<option value="rede">Rede</option>
-							<option value="outro">Outro</option>
-						</select>
-					</label>
-
-					<label id="otherLabel" class="hidden">Descreva (Outro)
-						<input id="otherText" placeholder="Descreva o problema" />
-					</label>
-					<div id="addFormFeedback" class="helper" style="display:none;margin-top:8px;color:#f8d7da;background:rgba(248,215,218,0.06);padding:8px;border-radius:6px"></div>
-
-					<label>Prioridade
-						<select id="priority">
-							<option value="normal">Normal</option>
-							<option value="alta">Alta</option>
-							<option value="baixa">Baixa</option>
-						</select>
-					</label>
-
-					<label>Descrição
-						<textarea id="description" rows="3" placeholder="Informações adicionais (opcional)"></textarea>
-					</label>
-
-					<div class="modal-actions">
-						<button type="button" id="cancelAdd" class="btn ghost">Cancelar</button>
-						<button type="submit" class="btn">Criar chamado</button>
-					</div>
-				</form>
+			<div>
+				<button id="addBtn" style="background:var(--accent);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;">Adicionar chamado</button>
+				<button id="toggleCompletedBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:8px;margin-left:8px">Ocultar Concluídos</button>
 			</div>
 		</div>
 
-		<div class="controls" style="margin-top:12px;display:flex;gap:8px;align-items:center">
-			<button id="addBtn" class="btn">Adicionar chamado</button>
+		<h2 style="margin-top:8px">Acompanhamento em Tempo Real</h2>
+		<div id="cardsRoot" style="margin-top:12px"></div>
+	</div>
+
+	<!-- Modal de criação para o usuário -->
+	<div id="addModal" class="modal hidden" role="dialog" aria-modal="true">
+		<div class="modal-panel">
+			<h2 style="margin-top:0">Novo Chamado</h2>
+			<form id="addForm">
+				<label>Solicitante
+					<input id="author" type="text" placeholder="Seu nome" required />
+				</label>
+				<label>Setor
+					<select id="setor" required>
+						<option value="">-- Escolha --</option>
+						<option value="Producao A">Produção A</option>
+						<option value="Producao B">Produção B</option>
+						<option value="ADM">ADM</option>
+						<option value="Almoxarifado">Almoxarifado</option>
+						<option value="outro">Outro</option>
+					</select>
+				</label>
+				<label>Categoria
+					<select id="issueType" required>
+						<option value="">-- Escolha --</option>
+						<option value="Impressora">Impressora</option>
+						<option value="Mouse">Mouse</option>
+						<option value="Senha">Senha</option>
+						<option value="Rede">Rede</option>
+						<option value="outro">Outro</option>
+					</select>
+				</label>
+				
+				<!-- Campo Ocultado por Padrão com Classe CSS dedicada -->
+				<label id="otherLabel" class="hidden-element">Descreva (Outro)
+					<input id="otherText" placeholder="Descreva o problema" />
+				</label>
+
+				<label>Descrição
+					<textarea id="description" rows="3" placeholder="Informações adicionais (opcional)"></textarea>
+				</label>
+				<input type="hidden" id="prioridade" name="prioridade" value="normal" />
+				<div id="addFormFeedback" class="helper">Erro ao enviar</div>
+				<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+					<button type="button" id="cancelAdd" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:6px">Cancelar</button>
+					<button type="submit" class="btn" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px">Criar</button>
+				</div>
+			</form>
 		</div>
+	</div>
 
-		<!-- Acompanhamento em Tempo Real -->
-		<section class="follow-area">
-			<div class="follow-title">Acompanhamento em Tempo Real</div>
-			<div id="cards" class="cards" aria-live="polite"></div>
-		</section>
+	<!-- Modal de feedback do usuário -->
+	<div id="feedbackModalUser" class="modal hidden" role="dialog" aria-modal="true">
+		<div class="modal-panel">
+			<h2 style="margin-top:0">Avaliar Acompanhamento</h2>
+			<form id="feedbackFormUser">
+				<input type="hidden" id="feedbackIdUser" />
+				<label>Nota (1-5)
+					<select id="feedbackRatingUser" required>
+						<option value="">-- Escolha --</option>
+						<option>5</option>
+						<option>4</option>
+						<option>3</option>
+						<option>2</option>
+						<option>1</option>
+					</select>
+				</label>
+				<label>Comentário<textarea id="feedbackCommentUser" rows="3" placeholder="Comentário sobre o atendimento (opcional)"></textarea></label>
+				<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+					<button type="button" id="cancelFeedbackUser" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:6px">Cancelar</button>
+					<button type="submit" class="btn" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px">Enviar Avaliação</button>
+				</div>
+			</form>
+		</div>
+	</div>
 
-		<footer>
-			<small>Dica: abra o dashboard técnico em outra aba para testar movimentação de chamados ao vivo.</small>
-		</footer>
-			<small>Dica: abra o dashboard técnico em outra aba para testar movimentação de chamados ao vivo.</small>
-			<div style="margin-top:6px;color:rgba(255,255,255,0.6)">Exportar e compartilhar relatórios locais</div>
+	<!-- Chat Modal -->
+	<div id="chatModal" class="modal hidden" role="dialog" aria-modal="true">
+		<div class="modal-panel" style="width:420px;max-width:95%;display:flex;flex-direction:column;min-height:350px;">
+			<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+				<div style="font-weight:700">Interações <span id="chatModalHeaderId" style="color:var(--muted);font-weight:600;margin-left:8px">#</span></div>
+				<button id="closeChatBtn" style="background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✖</button>
+			</div>
+			<div id="chatMessages" style="flex:1;overflow-y:auto;max-height:240px;padding:8px;border-radius:6px;background:linear-gradient(180deg,#051322,#061427);border:1px solid rgba(255,255,255,0.03);margin-bottom:8px">Nenhuma mensagem.</div>
+			<form id="chatForm" style="display:flex;gap:8px">
+				<input id="chatInput" type="text" placeholder="Escreva uma mensagem..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#fff;color:#0b1220" required />
+				<button type="submit" class="btn" style="background:var(--accent);color:#fff;padding:8px 12px;">Enviar</button>
+			</form>
+		</div>
+	</div>
 
 	<script>
-		// Consolidated JS for user page
-		(function(){
-			// simple access control: require login
-			if(!localStorage.getItem('ompi_current_user')){ location.href = 'index.html'; return; }
-			const STORAGE_KEY = 'ompi_chamados_db';
-			// quick-actions removidas: não há mais botões rápidos
-			const modal = document.getElementById('addModal');
-			const addForm = document.getElementById('addForm');
-			const cancelBtn = document.getElementById('cancelAdd');
-			const issueTypeEl = document.getElementById('issueType');
-			const otherLabel = document.getElementById('otherLabel');
-			const cardsRoot = document.getElementById('cards');
+	(function(){
+		function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"})[c]); }
+		function uid(){ return Date.now().toString(36) + Math.floor(Math.random()*9000).toString(36); }
 
-			function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-			function load(){ try{ const raw = localStorage.getItem(STORAGE_KEY); return raw? JSON.parse(raw): []; }catch(e){ return []; } }
-			function save(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+		const STORAGE_KEY = 'ompi_chamados_v1';
+		const COMMENT_KEY = 'ompi_comentarios_v1';
 
-			// current user from login (ompi_current_user) or fallback to stored name
-			function currentUser(){ return localStorage.getItem('ompi_current_user') || localStorage.getItem('ompi_user_name') || ''; }
+		function loadChamados(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
+		function saveChamados(arr){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){} }
+		function loadComentarios(){ try{ return JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]'); }catch(e){ return []; } }
+		function saveComentarios(arr){ try{ localStorage.setItem(COMMENT_KEY, JSON.stringify(arr)); }catch(e){} }
 
-			const presets = {
-				impressora: { categoria: 'Impressora', descricao: 'Impressora não imprime / papel atolado', prioridade: 'alta' },
-				mouse: { categoria: 'Mouse', descricao: 'Mouse sem resposta', prioridade: 'normal' },
-				senha: { categoria: 'Senha', descricao: 'Senha expirada / recuperação', prioridade: 'alta' },
-				rede: { categoria: 'Rede', descricao: 'Sem conectividade', prioridade: 'alta' }
+		function currentUser(){ return localStorage.getItem('ompi_current_user') || sessionStorage.getItem('ompi_current_user') || 'fabrica'; }
+
+		const localAPI = {
+			fetchChamados() { return loadChamados(); },
+			criarChamado(item) {
+				const arr = loadChamados();
+				arr.unshift(item);
+				saveChamados(arr);
+				return item;
+			},
+			atualizarChamado(id, fields) {
+				const arr = loadChamados();
+				const index = arr.findIndex(x => String(x.id) === String(id));
+				if (index !== -1) {
+					arr[index] = { ...arr[index], ...fields };
+					saveChamados(arr);
+				}
+			},
+			fetchComentarios(chamadoId) {
+				const todos = loadComentarios();
+				return todos.filter(c => String(c.chamado_id) === String(chamadoId));
+			},
+			criarComentario(comentario) {
+				const todos = loadComentarios();
+				todos.push(comentario);
+				saveComentarios(todos);
+				return comentario;
+			}
+		};
+
+		function isChamadoForCurrentUser(chamado){
+			try{
+				const user = currentUser().trim().toLowerCase();
+				let solicitante = String(chamado.solicitante || '').trim().toLowerCase();
+				if(!solicitante) return false;
+				return solicitante.includes(user) || user.includes(solicitante);
+			}catch(e){ return false; }
+		}
+
+		const cardsRoot = document.getElementById('cardsRoot');
+		const addBtn = document.getElementById('addBtn');
+		const addModal = document.getElementById('addModal');
+		const cancelAdd = document.getElementById('cancelAdd');
+		const addForm = document.getElementById('addForm');
+		const otherLabel = document.getElementById('otherLabel');
+		const issueTypeEl = document.getElementById('issueType');
+		const toggleCompletedBtn = document.getElementById('toggleCompletedBtn');
+		let hideCompleted = false;
+		let chatChamadoId = null;
+
+		// Modais Handlers
+		addBtn.addEventListener('click', ()=>{
+			document.getElementById('author').value = currentUser();
+			addModal.classList.remove('hidden');
+		});
+		
+		cancelAdd.addEventListener('click', ()=>{ 
+			addModal.classList.add('hidden'); 
+			addForm.reset(); 
+			otherLabel.classList.add('hidden-element'); // Reseta para oculto ao fechar
+		});
+
+		// Monitor dinâmico do select: Exibe apenas se a opção selecionada for 'outro'
+		if(issueTypeEl){ 
+			issueTypeEl.addEventListener('change', ()=>{ 
+				if(issueTypeEl.value === 'outro') {
+					otherLabel.classList.remove('hidden-element');
+					document.getElementById('otherText').setAttribute('required', 'required');
+				} else {
+					otherLabel.classList.add('hidden-element');
+					document.getElementById('otherText').removeAttribute('required');
+				}
+			}); 
+		}
+
+		// Envio do formulário
+		addForm.addEventListener('submit', (e)=>{
+			e.preventDefault();
+			const solicitante = document.getElementById('author').value.trim() || currentUser();
+			const setor = document.getElementById('setor').value;
+			const categoriaRaw = issueTypeEl.value;
+			const categoria = categoriaRaw === 'outro' ? (document.getElementById('otherText').value.trim() || 'Outro') : categoriaRaw;
+			const descricao = document.getElementById('description').value.trim();
+
+			const item = {
+				id: uid(),
+				solicitante: solicitante,
+				setor: setor,
+				categoria: categoria.charAt(0).toUpperCase() + categoria.slice(1),
+				descricao: descricao,
+				prioridade: 'normal',
+				status: 'pending',
+				data_abertura: new Date().toISOString(),
+				data_inicio: null,
+				data_conclusao: null,
+				feedback_rating: null,
+				feedback_comment: null
 			};
 
-			// quick-actions removidas; não há handlers aqui
+			localAPI.criarChamado(item);
+			addForm.reset();
+			otherLabel.classList.add('hidden-element');
+			addModal.classList.add('hidden');
+			renderCards();
+		});
 
-			const addBtn = document.getElementById('addBtn');
-			if(addBtn) addBtn.addEventListener('click', ()=>{
-				if(addForm) addForm.reset();
-				if(otherLabel) otherLabel.classList.add('hidden');
-				const fb = document.getElementById('addFormFeedback'); if(fb){ fb.style.display='none'; fb.textContent=''; }
-				const authorEl = document.getElementById('author'); if(authorEl) authorEl.value = currentUser();
-				if(modal) modal.classList.remove('hidden');
-			});
-			if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ if(modal) modal.classList.add('hidden'); if(addForm) addForm.reset(); if(otherLabel) otherLabel.classList.add('hidden'); const fb = document.getElementById('addFormFeedback'); if(fb){ fb.style.display='none'; fb.textContent=''; } });
-			const setorEl = document.getElementById('setor');
-			// inicializa visibilidade do campo 'other' de acordo com o valor atual da CATEGORIA (issueType)
-			if(issueTypeEl){
-				if(issueTypeEl.value === 'outro'){ if(otherLabel) otherLabel.classList.remove('hidden'); } else { if(otherLabel) otherLabel.classList.add('hidden'); }
-				issueTypeEl.addEventListener('change', ()=>{ if(issueTypeEl.value==='outro' && otherLabel) otherLabel.classList.remove('hidden'); else if(otherLabel) otherLabel.classList.add('hidden'); });
-			}
+		function renderCards(){
+			const arr = localAPI.fetchChamados();
+			let mine = arr.filter(it => isChamadoForCurrentUser(it));
+			
+			if(hideCompleted){ mine = mine.filter(x => String(x.status||'').toLowerCase() !== 'done'); }
+			cardsRoot.innerHTML = '';
+			
+			if(!mine.length){ cardsRoot.innerHTML = '<div style="color:var(--muted)">Nenhum chamado encontrado.</div>'; return; }
+			
+			mine.forEach(it=>{
+				const c = document.createElement('div'); c.className='card';
+				const shortId = String(it.id||'').slice(-6);
+				const statusClass = it.status === 'doing' ? 'doing' : (it.status === 'done' ? 'done' : 'pending');
+				const statusLabel = it.status === 'doing' ? 'Em Andamento' : (it.status === 'done' ? 'Concluído' : 'Pendente');
+				const abertura = it.data_abertura ? new Date(it.data_abertura).toLocaleString() : '-';
+				const inicio = it.data_inicio ? new Date(it.data_inicio).toLocaleString() : '-';
+				const conclusao = it.data_conclusao ? new Date(it.data_conclusao).toLocaleString() : '-';
+				
+				c.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                      <div style="display:flex;align-items:center;gap:10px">
+                        <div class="id">#${escapeHtml(shortId)}</div>
+                        <div style="font-weight:600;">${escapeHtml(it.categoria||'')}</div>
+                      </div>
+                      <div><span class="badge ${statusClass}">${statusLabel}</span></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:13px; color:#cfe3ff">${escapeHtml(it.descricao||'')}</div>
+                    <div class="meta" style="margin-top:8px;color:#cfe3ff">Setor: ${escapeHtml(it.setor||'')} &nbsp; Prioridade: ${escapeHtml(it.prioridade||'')}</div>
+                    <div class="timestamps" style="margin-top:8px;color:var(--muted);font-size:12px">
+                      <div>Abertura: ${escapeHtml(abertura)}</div>
+                      <div>Início: ${escapeHtml(inicio)}</div>
+                      <div>Conclusão: ${escapeHtml(conclusao)}</div>
+                    </div>
+                    ${ it.feedback_rating ? `<div style="margin-top:8px;color:var(--muted)"><strong>Avaliação:</strong> ${escapeHtml(String(it.feedback_rating))} /5 ${it.feedback_comment ? '- ' + escapeHtml(it.feedback_comment) : ''}</div>` : '' }
+                `;
 
-			if(addForm) addForm.addEventListener('submit', (e)=>{
-				e.preventDefault();
-				const fb = document.getElementById('addFormFeedback'); if(fb){ fb.style.display='none'; fb.textContent=''; }
-				let solicitante = (document.getElementById('author') && document.getElementById('author').value.trim()) || currentUser();
-				const setor = setorEl ? setorEl.value : '';
-				const categoriaRaw = issueTypeEl ? issueTypeEl.value : '';
-				const categoria = categoriaRaw ? (categoriaRaw.charAt(0).toUpperCase() + categoriaRaw.slice(1)) : '';
-				const descricao = (categoriaRaw === 'outro') ? (document.getElementById('otherText') ? document.getElementById('otherText').value.trim() : '') : (document.getElementById('description') ? document.getElementById('description').value.trim() : '');
-				const prioridade = document.getElementById('priority') ? document.getElementById('priority').value : 'normal';
+				const footer = document.createElement('div');
+				footer.style.display = 'flex';
+				footer.style.justifyContent = 'flex-end';
+				footer.style.marginTop = 'auto';
+				footer.style.paddingTop = '12px';
 
-				if(!setor){ if(fb){ fb.textContent='Por favor selecione o setor.'; fb.style.display='block'; } else alert('Por favor selecione o setor.'); return; }
-				if(!solicitante){ if(fb){ fb.textContent='Por favor informe seu nome.'; fb.style.display='block'; document.getElementById('author') && document.getElementById('author').focus(); } else { solicitante = prompt('Informe seu nome:') || 'Usuário'; } return; }
-				// se categoria for 'outro', exige-se preenchimento do campo otherText
-				if(categoriaRaw === 'outro'){
-					const otherTextEl = document.getElementById('otherText');
-					if(!otherTextEl || !otherTextEl.value.trim()){
-						if(fb){ fb.textContent='Por favor descreva o problema em "Descreva (Outro)".'; fb.style.display='block'; otherTextEl && otherTextEl.focus(); } else alert('Por favor descreva o problema.');
-						return;
-					}
+				if (it.status === 'done' && !it.feedback_rating) {
+					const fBtn = document.createElement('button');
+					fBtn.className = 'btn';
+					fBtn.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,0.1);color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;';
+					fBtn.textContent = 'Avaliar';
+					fBtn.addEventListener('click', () => {
+						document.getElementById('feedbackIdUser').value = it.id;
+						document.getElementById('feedbackModalUser').classList.remove('hidden');
+					});
+					footer.appendChild(fBtn);
 				}
-				// save name for auto-fill later
-				localStorage.setItem('ompi_user_name', solicitante);
-				// also save as ompi_current_user if present (login stores it)
-				if(!localStorage.getItem('ompi_current_user')) localStorage.setItem('ompi_current_user', solicitante);
 
-				const item = {
-					id: uid(),
-					solicitante: solicitante,
-					setor: setor,
-					categoria: categoria,
-					descricao: descricao,
-					prioridade: prioridade.charAt(0).toUpperCase() + prioridade.slice(1),
-					status: 'pending',
-					data_abertura: new Date().toISOString(),
-					data_inicio: null,
-					data_conclusao: null
-				};
-				const arr = load(); arr.unshift(item); save(arr);
-				addForm.reset(); otherLabel.classList.add('hidden'); modal.classList.add('hidden');
-				alert('Chamado criado com sucesso.');
+				const chatBtn = document.createElement('button');
+				chatBtn.textContent = '💬 Ver Interações';
+				chatBtn.className = 'btn-chat';
+				chatBtn.style.marginLeft = '8px';
+				chatBtn.addEventListener('click', ()=> openChat(String(it.id)));
+				
+				footer.appendChild(chatBtn);
+				c.appendChild(footer);
+				cardsRoot.appendChild(c);
+			});
+		}
+
+		if(toggleCompletedBtn){
+			toggleCompletedBtn.addEventListener('click', ()=>{
+				hideCompleted = !hideCompleted;
+				toggleCompletedBtn.textContent = hideCompleted ? 'Mostrar Concluídos' : 'Ocultar Concluídos';
 				renderCards();
 			});
+		}
 
-			// render user's chamados filtered by solicitante
-			function renderCards(){
-				const me = currentUser(); const arr = load();
-				console.debug('renderCards: currentUser=', me, 'items=', arr);
-				const mine = me ? arr.filter(x=>String(x.solicitante||'').toLowerCase() === String(me).toLowerCase()) : arr;
-				cardsRoot.innerHTML = '';
-				if(!mine.length){ cardsRoot.innerHTML = '<div style="color:var(--muted)">Nenhum chamado encontrado.</div>'; return; }
-				mine.forEach(it=>{
-					const c = document.createElement('div'); c.className='card';
-					const shortId = it.id.toString().slice(-6);
-					const statusClass = it.status === 'doing' ? 'doing' : (it.status === 'done' ? 'done' : 'pending');
-					const statusLabel = it.status === 'doing' ? 'Em Andamento' : (it.status === 'done' ? 'Concluído' : 'Pendente');
-					c.innerHTML = `<div class="id">#${shortId}</div><div style="font-weight:600;margin-top:6px">${escapeHtml(it.categoria||'')}</div><div style="margin-top:8px"><span class="badge ${statusClass}">${statusLabel}</span></div><div style="margin-top:6px;font-size:12px;color:#cfe3ff">status (raw): ${escapeHtml(it.status||'')}</div><div class="meta">Setor: ${escapeHtml(it.setor||'')}  Prioridade: ${escapeHtml(it.prioridade||'')}</div>`;
-					cardsRoot.appendChild(c);
-				});
-			}
+		const feedbackFormUser = document.getElementById('feedbackFormUser');
+		const cancelFeedbackUser = document.getElementById('cancelFeedbackUser');
+		cancelFeedbackUser && cancelFeedbackUser.addEventListener('click', ()=>{ document.getElementById('feedbackModalUser').classList.add('hidden'); feedbackFormUser.reset(); });
 
-			function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
-
-			// polling to update every 2 seconds
+		feedbackFormUser && feedbackFormUser.addEventListener('submit', (e)=>{
+			e.preventDefault(); 
+			const id = document.getElementById('feedbackIdUser').value; 
+			const rating = document.getElementById('feedbackRatingUser').value; 
+			const comment = document.getElementById('feedbackCommentUser').value.trim(); 
+			
+			localAPI.atualizarChamado(id, { feedback_rating: rating, feedback_comment: comment });
+			document.getElementById('feedbackModalUser').classList.add('hidden');
+			feedbackFormUser.reset();
 			renderCards();
-			setInterval(renderCards,2000);
+		});
 
-			// Exportação CSV removida desta página; agora disponível no Dashboard Técnico.
-		})();
+		function openChat(id){
+			chatChamadoId = String(id);
+			document.getElementById('chatModalHeaderId').textContent = '#' + String(chatChamadoId).slice(-6);
+			document.getElementById('chatModal').classList.remove('hidden');
+			carregarMensagens();
+		}
+
+		document.getElementById('closeChatBtn').addEventListener('click', () => {
+			document.getElementById('chatModal').classList.add('hidden');
+		});
+
+		function carregarMensagens(){
+			if(!chatChamadoId) return;
+			const listEl = document.getElementById('chatMessages');
+			const msgs = localAPI.fetchComentarios(chatChamadoId);
+			listEl.innerHTML = '';
+			
+			if(!msgs.length) { listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding-top:20px;">Nenhuma mensagem.</div>'; return; }
+			
+			const me = currentUser();
+			msgs.forEach(m => {
+				const div = document.createElement('div');
+				div.style.marginBottom='8px';
+				div.style.maxWidth='80%';
+				if(String(m.autor).trim().toLowerCase() === String(me).trim().toLowerCase()){
+					div.style.marginLeft='auto';
+					div.style.background='#2e7be6';
+					div.style.color='#fff';
+					div.style.padding='8px 10px';
+					div.style.borderRadius='10px 10px 6px 10px';
+				} else {
+					div.style.background='rgba(255,255,255,0.06)';
+					div.style.color='#eaf2ff';
+					div.style.padding='8px 10px';
+					div.style.borderRadius='10px 10px 10px 6px';
+				}
+				div.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-bottom:4px">${escapeHtml(m.autor)} • ${new Date(m.data_envio).toLocaleTimeString()}</div><div>${escapeHtml(m.mensagem)}</div>`;
+				listEl.appendChild(div);
+			});
+			listEl.scrollTop = listEl.scrollHeight;
+		}
+
+		document.getElementById('chatForm').addEventListener('submit', function(e){
+			e.preventDefault();
+			const input = document.getElementById('chatInput');
+			const text = input.value.trim();
+			if(!text || !chatChamadoId) return;
+
+			localAPI.criarComentario({
+				id: uid(),
+				chamado_id: chatChamadoId,
+				autor: currentUser(),
+				mensagem: text,
+				data_envio: new Date().toISOString()
+			});
+
+			input.value = '';
+			carregarMensagens();
+		});
+
+		renderCards();
+		setInterval(renderCards, 2000);
+	})();
 	</script>
 </body>
 </html>
-

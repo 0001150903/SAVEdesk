@@ -26,7 +26,6 @@
     /* Cartão extras */
     .id{font-weight:700;color:#f28a30}
     .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;color:#fff;margin-top:6px}
-    /* Status colors: pendente = vermelho, em andamento = amarelo, concluído = verde */
     .badge.pending{background:#ef4444}
     .badge.doing{background:#f59e0b;color:#0b1220}
     .badge.done{background:#10b981}
@@ -86,7 +85,7 @@
       </div>
 
       <div class="controls">
-        <input id="globalSearch" class="search" placeholder="Pesquisar por id, solicitante, setor, categoria, descrição" />
+        <input id="globalSearch" class="search" placeholder="Pesquisar por id, solicitante..." />
         <button id="openAddBtn" class="btn">Novo Chamado</button>
         <button id="refreshBtn" class="btn">Atualizar Sistema</button>
         <button id="resetBtn" class="btn ghost">Ocultar Concluídos</button>
@@ -110,7 +109,6 @@
     </section>
   </main>
 
-  <!-- Modal de Novo Chamado -->
   <div id="addModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-panel">
       <h2 style="margin-top:0">Novo Chamado</h2>
@@ -139,7 +137,6 @@
         <label id="otherLabel" class="hidden">Descreva (Outro)
           <input id="otherText" placeholder="Descreva o problema" />
         </label>
-        <div id="addFormFeedback" class="helper hidden"></div>
         <label>Prioridade
           <select id="priority">
             <option value="normal">Normal</option>
@@ -156,7 +153,6 @@
     </div>
   </div>
 
-  <!-- Modal de Chat -->
   <div id="chatModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-panel" style="width:480px;max-width:95%;display:flex;flex-direction:column;max-height:80vh;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -171,7 +167,6 @@
     </div>
   </div>
 
-  <!-- Modal de Triagem -->
   <div id="triageModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-panel" style="min-width:360px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -194,7 +189,6 @@
   </div>
 
   <script>
-    // Todo o script consolidado num único bloco e escopo
     document.addEventListener('DOMContentLoaded', () => {
       
       // Validação de Sessão
@@ -210,43 +204,40 @@
         location.href = 'index.html';
       });
 
-      function getAuthHeaders() {
-        const token = sessionStorage.getItem('ompi_token') || '';
-        return {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        };
-      }
+      // Chaves do LocalStorage
+      const STORAGE_KEY = 'ompi_chamados_v1';
+      const COMMENT_KEY = 'ompi_comentarios_v1';
 
-      // API
+      // API (100% LocalStorage - Sem usar "fetch")
       const api = {
         async fetchChamados() {
-          const res = await fetch('api_chamados.php', { method: 'GET', headers: getAuthHeaders() });
-          const text = await res.text().catch(()=>null);
-          if (!res.ok) throw new Error(text || ('Erro ' + res.status));
-          try{ return JSON.parse(text||'[]'); }catch(e){ return []; }
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         },
         async createChamado(item) {
-          const res = await fetch('api_chamados.php', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(item) });
-          if (!res.ok) throw new Error('Erro ao criar chamado');
-          return res.json();
+          const arr = await this.fetchChamados();
+          arr.unshift(item);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+          return item;
         },
         async updateChamado(id, updates) {
-          const res = await fetch(`api_chamados.php?id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify(updates) });
-          if (!res.ok) throw new Error('Erro ao atualizar chamado');
-          return res.json();
+          const arr = await this.fetchChamados();
+          const idx = arr.findIndex(x => String(x.id) === String(id));
+          if (idx !== -1) {
+            arr[idx] = { ...arr[idx], ...updates };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+            return arr[idx];
+          }
         }
       };
 
       // Utilitários
       function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
       function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
-      function currentUser(){ return sessionStorage.getItem('ompi_current_user') || sessionStorage.getItem('ompi_user_name') || ''; }
+      function currentUser(){ return sessionStorage.getItem('ompi_current_user') || sessionStorage.getItem('ompi_user_name') || 'Técnico'; }
 
       // Variáveis Globais de Estado
       let data = [];
       let chatChamadoId = null;
-      let showOnlyOpen = false;
       let hideCompleted = false;
 
       // Elementos do DOM
@@ -260,13 +251,11 @@
       const refreshBtn = document.getElementById('refreshBtn');
       const resetBtn = document.getElementById('resetBtn');
 
-      // Elementos do Chat
       const chatModal = document.getElementById('chatModal');
       const closeChatBtn = document.getElementById('closeChatBtn');
       const chatForm = document.getElementById('chatForm');
       const chatInput = document.getElementById('chatInput');
       
-      // Elementos da Triagem
       const triageModal = document.getElementById('triageModal');
       const triageSaveBtn = document.getElementById('triageSaveBtn');
       const closeTriageBtn = document.getElementById('closeTriageBtn');
@@ -330,7 +319,6 @@
           if(container){
             const card = createCard(item);
             
-            // Botões de Ação Dinâmicos
             const chatBtn = document.createElement('button');
             chatBtn.textContent = '💬 Interações';
             chatBtn.className = 'btn';
@@ -373,6 +361,7 @@
         const patch = { status: newStatus, updated_at: new Date().toISOString() };
         if(newStatus === 'doing' && !it.data_inicio) patch.data_inicio = new Date().toISOString();
         if(newStatus === 'done' && !it.data_conclusao) patch.data_conclusao = new Date().toISOString();
+        
         try {
           const updated = await api.updateChamado(it.id, patch);
           Object.assign(it, updated || {});
@@ -402,10 +391,9 @@
         triageSaveBtn.textContent = 'Salvando...';
 
         try {
-          // Utilizando a API já configurada internamente no invés do fetch solto
           await api.updateChamado(chamadoId, { prioridade: novaPrioridade });
           fecharTriagem();
-          await refreshAll(); // Chama o refresh local sem precisar recarregar o F5 na página
+          await refreshAll();
         } catch (error) {
           alert('Erro ao salvar triagem: ' + error.message);
         } finally {
@@ -414,7 +402,7 @@
         }
       });
 
-      // --- Funções de Chat ---
+      // --- Funções de Chat (100% LocalStorage) ---
       function abrirChat(id){
         chatChamadoId = String(id);
         document.getElementById('chatModalHeaderId').textContent = '#' + String(chatChamadoId).slice(-6);
@@ -427,61 +415,58 @@
         chatChamadoId = null;
       });
 
-      async function carregarMensagens(){
+      function carregarMensagens(){
         if(!chatChamadoId) return;
         const listEl = document.getElementById('chatMessages'); 
-        listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Carregando...</div>';
         
-        try {
-          const res = await fetch(`api_comentarios.php?chamado_id=${encodeURIComponent(chatChamadoId)}`, { headers: getAuthHeaders() });
-          if(!res.ok) throw new Error('HTTP '+res.status);
-          const msgs = await res.json(); 
-          listEl.innerHTML = '';
-          
-          if(msgs.length === 0) {
-            listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma interação ainda.</div>';
-            return;
-          }
+        const allComments = JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]');
+        const msgs = allComments.filter(m => String(m.chamado_id) === String(chatChamadoId));
 
-          const me = currentUser();
-          msgs.forEach(m => {
-            const div = document.createElement('div'); 
-            const isMe = String(m.autor).trim().toLowerCase() === String(me).trim().toLowerCase();
-            
-            div.className = 'chat-msg ' + (isMe ? 'me' : 'other');
-            
-            // Formatando o visual da conversa (Semelhante ao WhatsApp)
-            const hora = new Date(m.data_envio).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            div.innerHTML = `
-              <div class="chat-meta">${escapeHtml(m.autor)} • ${hora}</div>
-              <div>${escapeHtml(m.mensagem)}</div>
-            `;
-            listEl.appendChild(div);
-          });
-          listEl.scrollTop = listEl.scrollHeight;
-        } catch(err) { 
-          listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Erro ao carregar mensagens.</div>'; 
+        listEl.innerHTML = '';
+        
+        if(msgs.length === 0) {
+          listEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px;align-self:center;">Nenhum registro de interação.</div>';
+          return;
         }
+
+        const loggedUser = currentUser();
+        msgs.forEach(m => {
+          const div = document.createElement('div'); 
+          
+          const isMe = String(m.autor).trim().toLowerCase() === loggedUser.trim().toLowerCase() || 
+                       (loggedUser.toLowerCase() === 'tecnico' && String(m.autor).toLowerCase().includes('tecnico'));
+          
+          div.className = 'chat-msg ' + (isMe ? 'me' : 'other');
+          
+          const hora = new Date(m.data_envio).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          div.innerHTML = `
+            <div class="chat-meta">${escapeHtml(m.autor)} • ${hora}</div>
+            <div>${escapeHtml(m.mensagem)}</div>
+          `;
+          listEl.appendChild(div);
+        });
+        listEl.scrollTop = listEl.scrollHeight;
       }
 
       chatForm.addEventListener('submit', async (e) => { 
         e.preventDefault(); 
         const text = (chatInput.value||'').trim(); 
-        if(!text) return; 
+        if(!text || !chatChamadoId) return; 
         
         const autor = currentUser() || 'Técnico'; 
-        try { 
-          const res = await fetch('api_comentarios.php', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({chamado_id: chatChamadoId, autor, mensagem: text})
-          }); 
-          if(!res.ok) throw new Error('HTTP '+res.status); 
-          chatInput.value = ''; 
-          await carregarMensagens(); 
-        } catch(err) { 
-          alert('Falha ao enviar mensagem.'); 
-        } 
+        
+        const allComments = JSON.parse(localStorage.getItem(COMMENT_KEY) || '[]');
+        allComments.push({
+          id: uid(),
+          chamado_id: chatChamadoId,
+          autor: autor,
+          mensagem: text,
+          data_envio: new Date().toISOString()
+        });
+        localStorage.setItem(COMMENT_KEY, JSON.stringify(allComments));
+        
+        chatInput.value = ''; 
+        carregarMensagens(); 
       });
 
       // --- Operações Globais de Dados ---
@@ -491,11 +476,10 @@
           data.sort((a,b)=> (Number(a.id)||0) - (Number(b.id)||0)); 
           render(); 
         } catch(e) { 
-          showErrorBanner(e.message || String(e)); 
+          console.error(e);
         } 
       }
 
-      // Eventos de Filtro e Busca
       if(searchEl) searchEl.addEventListener('input', render);
       
       if(refreshBtn) refreshBtn.addEventListener('click', async () => {
@@ -516,6 +500,7 @@
         const authorEl = document.getElementById('author'); 
         if(authorEl) authorEl.value = currentUser(); 
       });
+      
       if(cancelBtn) cancelBtn.addEventListener('click', () => { modalAdd.classList.add('hidden'); addForm.reset(); });
 
       addForm.addEventListener('submit', async (e) => {
@@ -537,25 +522,13 @@
         } catch(err) { alert('Erro ao criar chamado'); }
       });
 
-      // Banner de Erro
-      let _errorBannerAdded = false;
-      function showErrorBanner(msg){ 
-        if(_errorBannerAdded) return; 
-        _errorBannerAdded = true; 
-        const b = document.createElement('div'); 
-        b.style.background='rgba(220,38,38,0.12)'; b.style.color='#ffdddd'; b.style.padding='8px 12px'; b.style.border='1px solid rgba(220,38,38,0.18)'; b.style.borderRadius='8px'; b.style.marginBottom='12px'; 
-        b.textContent = 'Erro de Comunicação: ' + msg; 
-        const main = document.querySelector('main.user-wrap'); 
-        if(main) main.insertBefore(b, main.firstChild); 
-      }
-
       // Inicialização e Polling
       refreshAll();
       setInterval(async () => {
         try {
           const nd = await api.fetchChamados(); 
           if(JSON.stringify(nd) !== JSON.stringify(data)){ data = nd; render(); }
-        } catch(e) {} // Polling falha silenciosamente sem assustar o usuário
+        } catch(e) {}
       }, 5000);
 
     });

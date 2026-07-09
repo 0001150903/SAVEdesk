@@ -278,7 +278,7 @@
 
     <section class="main-solution-card">
       <span class="badge ti" style="font-size: 12px; padding: 4px 12px;">SOLUÇÃO CORE PRINCIPAL</span>
-      <h2>SAVEdesk</h2>
+      <h2>SAVEdesk v2.0</h2>
       
       <div class="main-grid">
         <div class="project-info">
@@ -373,11 +373,14 @@
         
         show('Verificando credenciais...');
         setTimeout(()=>{
-          // Redirecionamentos baseados na estrutura de perfis
-          
+          // Geramos as credenciais simuladas na Sessão, essenciais para não sermos bloqueados nas páginas dos painéis
+          sessionStorage.setItem('ompi_token', 'token-valido-simulado');
+          sessionStorage.setItem('ompi_current_user', u);
+          localStorage.setItem('ompi_current_user', u);
+
           // 1. Acesso Administrador
           if(u==='admin' && p==='123'){ 
-            localStorage.setItem('ompi_current_user','admin'); 
+            sessionStorage.setItem('ompi_current_role','admin'); 
             show('Acesso administrativo concedido. Redirecionando...'); 
             setTimeout(()=> location.href='dashboard_administrador.html', 600); 
             return; 
@@ -385,7 +388,7 @@
           
           // 2. Acesso Técnico de TI
           if(u==='tecnico' && p==='123'){ 
-            localStorage.setItem('ompi_current_user','tecnico'); 
+            sessionStorage.setItem('ompi_current_role','tecnico'); 
             show('Acesso concedido. Redirecionando...'); 
             setTimeout(()=> location.href='dashboard_ti.html', 600); 
             return; 
@@ -393,14 +396,14 @@
           
           // 3. Acesso Fábrica/Colaborador
           if(u==='fabrica' && p==='123'){ 
-            localStorage.setItem('ompi_current_user','fabrica'); 
+            sessionStorage.setItem('ompi_current_role','fabrica'); 
             show('Acesso concedido. Redirecionando...'); 
             setTimeout(()=> location.href='user.html', 600); 
             return; 
           }
 
-          // Fallback genérico para outros utilizadores informados ou cadastrados manualmente
-          localStorage.setItem('ompi_current_user', u); 
+          // Fallback genérico para outros utilizadores informados
+          sessionStorage.setItem('ompi_current_role','fabrica'); 
           show('Acessando painel rápido...'); 
           setTimeout(()=> location.href='user.html', 600);
         }, 700);

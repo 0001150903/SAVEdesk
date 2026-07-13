@@ -38,7 +38,7 @@
     input,select,textarea{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:#fff;color:#0b1220}
     .hidden{display:none}
 
-    /* Estilos atualizados para o Chat (Flexbox) */
+    /* Estilos do Chat (Flexbox) */
     #chatMessages {
       display: flex;
       flex-direction: column;
@@ -77,7 +77,7 @@
   <main class="user-wrap">
     <header class="user-header">
       <div class="brand">
-        <img src="mídia/Logo.svg" alt="Logo" style="width:42px;height:42px;border-radius:8px">
+        <img src="Logo.svg" alt="Logo" style="width:42px;height:42px;border-radius:8px;background:#fff;padding:2px">
         <div>
           <h1 style="margin:0">SAVEdesk — Técnico</h1>
           <div style="color:var(--muted);font-size:13px">Quadro Kanban</div>
@@ -193,7 +193,6 @@
       
       // Validação de Sessão
       if(!sessionStorage.getItem('ompi_token')){ location.href = 'index.html'; return; }
-      
       const rawRole = sessionStorage.getItem('ompi_current_role') || '';
       const currentRole = String(rawRole).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '');
       if(!(currentRole === 'tecnico' || currentRole === 'tec')){ location.href = 'index.html'; return; }
@@ -208,7 +207,7 @@
       const STORAGE_KEY = 'ompi_chamados_v1';
       const COMMENT_KEY = 'ompi_comentarios_v1';
 
-      // API (100% LocalStorage - Sem usar "fetch")
+      // API LocalStorage
       const api = {
         async fetchChamados() {
           return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -319,26 +318,57 @@
           if(container){
             const card = createCard(item);
             
+            const footer = document.createElement('div'); 
+            footer.style.display = 'flex';
+            footer.style.flexWrap = 'wrap';
+            footer.style.gap = '6px';
+            footer.style.marginTop = '10px';
+
+            // NOVO: BOTÕES DE AVANÇAR CHAMADO
+            if(item.status === 'pending') {
+              const moveBtn = document.createElement('button');
+              moveBtn.textContent = 'Mover ➔';
+              moveBtn.className = 'btn';
+              moveBtn.style.fontSize = '12px';
+              moveBtn.style.padding = '4px 8px';
+              moveBtn.style.background = '#f59e0b';
+              moveBtn.style.color = '#0b1220';
+              moveBtn.addEventListener('click', async () => {
+                await api.updateChamado(item.id, { status: 'doing', data_inicio: new Date().toISOString() });
+                refreshAll();
+              });
+              footer.appendChild(moveBtn);
+
+              const triagemBtn = document.createElement('button');
+              triagemBtn.textContent = '⚙️ Prioridade';
+              triagemBtn.className = 'btn ghost';
+              triagemBtn.style.fontSize = '12px';
+              triagemBtn.style.padding = '4px 8px';
+              triagemBtn.addEventListener('click', () => abrirTriagem(String(item.id), String(item.prioridade||'normal')));
+              footer.appendChild(triagemBtn);
+            } 
+            else if(item.status === 'doing') {
+              const moveBtn = document.createElement('button');
+              moveBtn.textContent = 'Concluir ✓';
+              moveBtn.className = 'btn';
+              moveBtn.style.fontSize = '12px';
+              moveBtn.style.padding = '4px 8px';
+              moveBtn.style.background = '#10b981';
+              moveBtn.addEventListener('click', async () => {
+                await api.updateChamado(item.id, { status: 'done', data_conclusao: new Date().toISOString() });
+                refreshAll();
+              });
+              footer.appendChild(moveBtn);
+            }
+
+            // Chat sempre presente
             const chatBtn = document.createElement('button');
             chatBtn.textContent = '💬 Interações';
-            chatBtn.className = 'btn';
-            chatBtn.style.marginLeft = '8px';
+            chatBtn.className = 'btn ghost';
             chatBtn.style.fontSize = '12px';
+            chatBtn.style.padding = '4px 8px';
             chatBtn.addEventListener('click', () => abrirChat(String(item.id)));
-            
-            const triagemBtn = document.createElement('button');
-            triagemBtn.textContent = '⚙️ Prioridade';
-            triagemBtn.className = 'btn ghost';
-            triagemBtn.style.marginLeft = '8px';
-            triagemBtn.style.fontSize = '12px';
-            triagemBtn.addEventListener('click', () => abrirTriagem(String(item.id), String(item.prioridade||'normal')));
-            
-            const footer = document.createElement('div'); 
-            footer.style.display='flex'; 
-            footer.style.justifyContent='flex-end'; 
-            footer.style.marginTop='10px'; 
             footer.appendChild(chatBtn);
-            footer.appendChild(triagemBtn);
             
             card.appendChild(footer);
             container.appendChild(card);
@@ -402,7 +432,7 @@
         }
       });
 
-      // --- Funções de Chat (100% LocalStorage) ---
+      // --- Funções de Chat ---
       function abrirChat(id){
         chatChamadoId = String(id);
         document.getElementById('chatModalHeaderId').textContent = '#' + String(chatChamadoId).slice(-6);

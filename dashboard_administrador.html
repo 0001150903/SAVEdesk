@@ -64,10 +64,39 @@
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
     .hidden { display: none !important; }
     
-    /* Chat bubbles */
-    .chat-msg { margin-bottom: 8px; max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 13px; }
-    .chat-msg.me { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px 10px 6px 10px; }
-    .chat-msg.other { background: rgba(255,255,255,0.06); color: #eaf2ff; border-radius: 10px 10px 10px 6px; }
+    /* Chat bubbles (WhatsApp Style) */
+    #chatMessages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-msg.me {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 14px 14px 2px 14px;
+    }
+    .chat-msg.other {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.08);
+      color: #eaf2ff;
+      border-radius: 14px 14px 14px 2px;
+    }
+    .chat-meta {
+      font-size: 10px;
+      opacity: 0.75;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -85,7 +114,6 @@
       <div class="controls">
         <input id="globalSearch" class="search" placeholder="Pesquisar por id, solicitante, setor..." />
         <button type="button" class="btn" onclick="abrirModalCadastro()" style="display:flex; gap:8px; align-items:center;">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
           Novo Usuário
         </button>
         <button id="openCreate" class="btn ghost">Novo Chamado</button>
@@ -169,16 +197,15 @@
     </div>
   </div>
 
-  <div id="editModal" class="modal hidden">
+  <div id="createModal" class="modal hidden">
     <div class="modal-panel" style="width: 460px;">
-      <h2 id="modalTitle" style="margin-top:0">Editar Chamado</h2>
-      <form id="editForm">
-        <input id="editId" type="hidden" />
-        <label>Solicitante<input id="editSolicitante" required /></label>
-        <label>Contato<input id="editContato" placeholder="Telefone ou e-mail" /></label>
+      <h2 id="modalTitle" style="margin-top:0">Criar Novo Chamado</h2>
+      <form id="createForm">
+        <label>Solicitante<input id="createSolicitante" required /></label>
+        <label>Contato<input id="createContato" placeholder="Telefone ou e-mail" /></label>
         <div style="display:flex; gap:12px">
           <label style="flex:1">Setor
-            <select id="editSetor" required>
+            <select id="createSetor" required>
               <option value="">--</option>
               <option>ADM</option>
               <option>Producao A</option>
@@ -187,7 +214,7 @@
             </select>
           </label>
           <label style="flex:1">Prioridade
-            <select id="editPrioridade">
+            <select id="createPrioridade">
               <option value="baixa">Baixa</option>
               <option value="normal" selected>Normal</option>
               <option value="alta">Alta</option>
@@ -196,7 +223,7 @@
           </label>
         </div>
         <label>Categoria
-          <select id="editCategoria" required>
+          <select id="createCategoria" required>
             <option value="">--</option>
             <option value="Impressora">Impressora</option>
             <option value="Mouse">Mouse</option>
@@ -204,17 +231,17 @@
             <option value="outro">Outro</option>
           </select>
         </label>
-        <label id="editOtherLabel" class="hidden">Descreva (Outro)<input id="editOtherText" /></label>
-        <label>Status
-          <select id="editStatus">
+        <label id="createOtherLabel" class="hidden">Descreva (Outro)<input id="createOtherText" /></label>
+        <label>Status Inicial
+          <select id="createStatus">
             <option value="pending">Pendente</option>
             <option value="doing">Em andamento</option>
             <option value="done">Concluído</option>
           </select>
         </label>
-        <label>Descrição<textarea id="editDescricao" rows="3"></textarea></label>
+        <label>Descrição<textarea id="createDescricao" rows="3"></textarea></label>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
-          <button type="button" id="cancelEdit" class="btn ghost">Cancelar</button>
+          <button type="button" id="cancelCreate" class="btn ghost">Cancelar</button>
           <button type="submit" class="btn">Salvar Chamado</button>
         </div>
       </form>
@@ -369,8 +396,7 @@
       visible.forEach(it => {
         const tr = document.createElement('tr');
         
-        let actions = `<button data-action="edit" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;">Editar</button>`;
-        actions += `<button data-action="delete" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;margin-left:4px;color:#ef4444;border-color:rgba(239,68,68,0.3)">Excluir</button>`;
+        let actions = `<button data-action="delete" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;color:#ef4444;border-color:rgba(239,68,68,0.3)">Excluir</button>`;
         
         if(it.status === 'done') {
           actions += `<button data-action="reopen" data-id="${it.id}" class="btn ghost" style="padding:4px 8px;font-size:11px;margin-left:4px;color:#f59e0b">Reabrir</button>`;
@@ -393,8 +419,7 @@
         tableBody.appendChild(tr);
       });
 
-      // Bind eventos dinâmicos na tabela
-      document.querySelectorAll('button[data-action="edit"]').forEach(b => b.addEventListener('click', onEditClick));
+      // Bind eventos dinâmicos na tabela (Edição removida da tabela)
       document.querySelectorAll('button[data-action="delete"]').forEach(b => b.addEventListener('click', onDeleteClick));
       document.querySelectorAll('button[data-action="reopen"]').forEach(b => b.addEventListener('click', onReopenClick));
       document.querySelectorAll('button[data-action="chat"]').forEach(b => b.addEventListener('click', onChatClick));
@@ -408,36 +433,6 @@
     }
 
     // Handlers de Ações da Tabela
-    function onEditClick() {
-      const id = this.getAttribute('data-id');
-      const it = itemsCache.find(x => String(x.id) === id);
-      if(!it) return;
-
-      document.getElementById('editId').value = it.id;
-      document.getElementById('editSolicitante').value = it.solicitante || '';
-      document.getElementById('editContato').value = it.contato || '';
-      document.getElementById('editSetor').value = it.setor || '';
-      
-      const catSelect = document.getElementById('editCategoria');
-      const isOther = !Array.from(catSelect.options).some(o => o.value === it.categoria);
-      if(isOther) {
-        catSelect.value = 'outro';
-        document.getElementById('editOtherLabel').classList.remove('hidden');
-        document.getElementById('editOtherText').value = it.categoria;
-      } else {
-        catSelect.value = it.categoria;
-        document.getElementById('editOtherLabel').classList.add('hidden');
-        document.getElementById('editOtherText').value = '';
-      }
-
-      document.getElementById('editPrioridade').value = it.prioridade || 'normal';
-      document.getElementById('editStatus').value = it.status || 'pending';
-      document.getElementById('editDescricao').value = it.descricao || '';
-      
-      document.getElementById('modalTitle').textContent = 'Editar Chamado';
-      document.getElementById('editModal').classList.remove('hidden');
-    }
-
     async function onDeleteClick() {
       if(!confirm('Atenção: Tem a certeza que deseja excluir permanentemente este chamado?')) return;
       await api.deleteChamado(this.getAttribute('data-id'));
@@ -449,44 +444,40 @@
       refreshAll();
     }
 
-    // Modal Create / Edit Submission
-    document.getElementById('editCategoria').addEventListener('change', function() {
-      if(this.value === 'outro') { document.getElementById('editOtherLabel').classList.remove('hidden'); }
-      else { document.getElementById('editOtherLabel').classList.add('hidden'); }
+    // Modal Create Submission
+    document.getElementById('createCategoria').addEventListener('change', function() {
+      if(this.value === 'outro') { document.getElementById('createOtherLabel').classList.remove('hidden'); }
+      else { document.getElementById('createOtherLabel').classList.add('hidden'); }
     });
 
-    document.getElementById('cancelEdit').addEventListener('click', () => {
-      document.getElementById('editModal').classList.add('hidden');
-      document.getElementById('editForm').reset();
+    document.getElementById('cancelCreate').addEventListener('click', () => {
+      document.getElementById('createModal').classList.add('hidden');
+      document.getElementById('createForm').reset();
     });
 
     document.getElementById('openCreate').addEventListener('click', () => {
-      document.getElementById('editForm').reset();
-      document.getElementById('editId').value = '';
-      document.getElementById('modalTitle').textContent = 'Novo Chamado';
-      document.getElementById('editStatus').value = 'pending';
-      document.getElementById('editModal').classList.remove('hidden');
+      document.getElementById('createForm').reset();
+      document.getElementById('createStatus').value = 'pending';
+      document.getElementById('createModal').classList.remove('hidden');
     });
 
-    document.getElementById('editForm').addEventListener('submit', async (e) => {
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('editId').value;
-      const catSelect = document.getElementById('editCategoria').value;
+      const catSelect = document.getElementById('createCategoria').value;
       
       const payload = {
-        solicitante: document.getElementById('editSolicitante').value,
-        contato: document.getElementById('editContato').value,
-        setor: document.getElementById('editSetor').value,
-        categoria: catSelect === 'outro' ? document.getElementById('editOtherText').value : catSelect,
-        prioridade: document.getElementById('editPrioridade').value,
-        status: document.getElementById('editStatus').value,
-        descricao: document.getElementById('editDescricao').value
+        solicitante: document.getElementById('createSolicitante').value,
+        contato: document.getElementById('createContato').value,
+        setor: document.getElementById('createSetor').value,
+        categoria: catSelect === 'outro' ? document.getElementById('createOtherText').value : catSelect,
+        prioridade: document.getElementById('createPrioridade').value,
+        status: document.getElementById('createStatus').value,
+        descricao: document.getElementById('createDescricao').value
       };
 
-      if (id) { await api.updateChamado(id, payload); } 
-      else { await api.createChamado(payload); }
+      await api.createChamado(payload);
       
-      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('createModal').classList.add('hidden');
       refreshAll();
     });
 
@@ -554,16 +545,26 @@
       
       list.innerHTML = '';
       if(!msgs.length) {
-        list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Nenhum registo de interação.</div>';
+        list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px;align-self:center;">Nenhum registro de interação.</div>';
         return;
       }
       
-      const adminUser = localStorage.getItem('ompi_current_user') || 'Admin Geral';
+      const currentUser = localStorage.getItem('ompi_current_user') || 'Admin Geral';
+      
       msgs.forEach(m => {
         const div = document.createElement('div');
-        const isMe = String(m.autor).toLowerCase().includes(adminUser.toLowerCase()) || String(m.autor).toLowerCase().includes('admin');
+        const isMe = String(m.autor).trim().toLowerCase() === currentUser.trim().toLowerCase() || 
+                     (currentUser === 'admin' && String(m.autor).toLowerCase().includes('admin'));
+                     
         div.className = 'chat-msg ' + (isMe ? 'me' : 'other');
-        div.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;opacity:0.8">${escapeHtml(m.autor)} • ${new Date(m.data_envio).toLocaleTimeString()}</div><div>${escapeHtml(m.mensagem)}</div>`;
+        
+        const horaFormatada = new Date(m.data_envio).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        div.innerHTML = `
+          <div class="chat-meta">${escapeHtml(m.autor)} • ${horaFormatada}</div>
+          <div>${escapeHtml(m.mensagem)}</div>
+        `;
+        
         list.appendChild(div);
       });
       list.scrollTop = list.scrollHeight;

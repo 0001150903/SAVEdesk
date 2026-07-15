@@ -64,10 +64,15 @@ Este projeto está licenciado sob a Licença Apache 2.0 - veja o arquivo LICENSE
 
 👨‍💻 Autores  
 **Maiderson Junio de Souza Oliveira - Desenvolvedor Full Stack**
+
 **Lorena Santos Figueredo - Analista de QA** 
+
 **Raissa Ellen de Moraes - Engenheira de Software** 
+
 **Matheus Henrique Teixeira Munis - Especialista em UX/UI e Designer**  
+
 **Erick Gonçalves Amaral - Arquiteto de Banco de Dados**  
+
 **Gizele Telheiro dos Santos - Analista de Negócios**
 
 Projeto desenvolvido para o curso de Informática para Internet - SENAI.
